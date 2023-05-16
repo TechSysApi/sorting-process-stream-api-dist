@@ -1,0 +1,1841 @@
+swagger: '2.0'
+info:
+  title: 'Sorting Process Stream API'
+  description: "Exposing different events occuring during the sorting process steps a mailpiece has to undergo to pass through a sorting center.\nProviding informations about assigned destinations, applied services, read coding informations and more."
+  contact:
+    name: techsysplus
+    email: devops.techsysplus@post.ch
+  version: 0.14.0-feature-updateCodingApi.1
+host: 'server:8080'
+basePath: logistics.sorting.process
+paths:
+  logistics.sorting.process.Mailpiece-event:
+    get:
+      summary: 'Composite/Json event exposing the different events of a mailpiece during an sorting process.'
+      tags:
+        - logistics.sorting.process
+      responses:
+        '200':
+          schema: {type: object, $ref: 'MailpieceEvent'}
+definitions:
+  DateTime:
+    type: string
+    description: "<a href=\"https://swagger.io/docs/specification/data-models/data-types/#string\">String @format date-time</a>,\nas defined by <a href=\"https://tools.ietf.org/html/rfc3339#section-5.6\">RFC 3339, section 5.6</a>,\nfor example: <code>2014-05-22T10:42:42.542+00:00</code>."
+    format: date-time
+  Int:
+    type: integer
+    description: '<a href="https://swagger.io/docs/specification/data-models/data-types/#numbers">Number @asType integer</a>'
+  MailpieceEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Globally Unique identifier for this mailpiece event.'
+      mailpieceGlobalKey:
+        type: string
+        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+      coded:
+        $ref: 'Coded'
+        description: 'Mailpiece has been coded during the sorting process by either the automatic coding system (MMS) or at the manual coding system (MCS).'
+    required:
+      - eventId
+      - mailpieceGlobalKey
+    additionalProperties: false
+  AssignmentAddressingDestinationResult:
+    type: object
+    properties:
+      addressingDestinationKey:
+        type: string
+        description: 'Key of the AddressingDestination that was selected for this mailpiece.'
+        maxLength: 200
+      deliveryOfficePostcodeKey:
+        type: string
+        description: 'The postcode key of the delivery office that handles this addressing destination.'
+        maxLength: 200
+      propertyGroupKey:
+        type: string
+        description: 'The property group that was used to select this AddressingDestination.'
+        maxLength: 200
+    required:
+      - addressingDestinationKey
+      - deliveryOfficePostcodeKey
+    additionalProperties: false
+    description: 'Resolved addressing destination from delivery plan.'
+  AssignmentCodingReason:
+    type: string
+    enum:
+      - NO_ADDRESS_ON_MAILPIECE
+      - NO_IMAGE
+      - POOR_IMAGE
+      - REJECTED_TECHNICAL
+      - REJECTED_UNRESOLVABLE
+      - REJECTED_TIMEOUT
+    description: "NO_ADDRESS_ON_MAILPIECE = Reject because mailpiece either has no visible address, is damaged or in case it is not a Kleinware doesn't contain a barcode.\nNO_IMAGE = Technical problem: e.g. images are black, too dark / white or no information is visible. The image quality does not allow reading of the address.\nPOOR_IMAGE = Insufficient image quality or poor contrast. The image quality does not allow reading of the address.\nREJECTED_TECHNICAL = Reject due to technical problems (e.g. black images, poor resolution, blurred images, only partial image build up ).\nREJECTED_UNRESOLVABLE = Reject due to unresolved mailpiece (e.g. no address visible on the image, only a part of the sender visible, recipient coding cannot be done).\nREJECTED_TIMEOUT = Reject due to a timeout. In this case the solution doesn't deliver a result within a specific time."
+  AssignmentContainerPositionManuallyAccessible:
+    type: object
+    properties:
+      containerPositionName:
+        type: string
+        description: 'An unique name within a sorting location to identify a container position.'
+        maxLength: 200
+    required:
+      - containerPositionName
+    additionalProperties: false
+    description: 'Mail is manually sorted to containers because they can not be reached by an outlet.'
+  AssignmentContainerPositionViaOutlet:
+    type: object
+    properties:
+      containerPositionName:
+        type: string
+        description: 'An unique name within a sorting location to identify a container position.'
+        maxLength: 200
+      outletName:
+        type: string
+        description: 'An unique name within the sorting system.'
+        maxLength: 200
+    required:
+      - containerPositionName
+      - outletName
+    additionalProperties: false
+    description: 'Mail is automatically sorted to containers which can be reached by an outlet. This typically is the situation on a parcel sorting machine.'
+  AssignmentDeliveryPointType:
+    type: string
+    enum:
+      - NONE
+      - DOMICILE
+      - PICK_POST
+      - MY_POST_24
+      - PO_BOX
+      - POSTE_RESTANTE
+      - COMPANY_POSTCODE
+      - INTERNATIONAL_MAILPIECE
+      - MILITARY
+      - INTERNAL_POSTCODE
+    description: "NONE = no service\nDOMICILE = Domiziladresse\nPICK_POST = Pickpost\nMY_POST_24 = myPost24\nPO_BOX = Post Office Box (Postfach)\nPOSTE_RESTANTE = Retain at swiss post (Postlagernd)\nCOMPANY_POSTCODE = Company Postcode indicates (FirmenPLZ)\nINTERNATIONAL_PARCEL = International address (Export)\nMILITARY = Military address\nINTERNAL_POSTCODE = Swiss post internal postcode"
+  AssignmentDistributionStrategy:
+    type: string
+    enum:
+      - ROUND_ROBIN
+      - WATERFALL
+      - WATERFALL_AND_ROUND_ROBIN
+      - LEAST_COST
+    description: "Defines the distribution strategy to use when multiple Outlets are available for a given OutletGroup.\n- ROUND_ROBIN: Use each Outlet one after the other, so that each Outlet receices the same amount of mailpieces.\n- WATERFALL: Use one Outlet until it's full, then use the next one (the order of the Outlets is determined by the priority attribute).\n- WATERFALL_AND_ROUND_ROBIN: The same as WATERFALL but if there are multiple Outlets that have the same priority use ROUNDROBIN between them.\n- LEAST_COST: Use the Outlets that has the least cost associated (eg. is closes or can be accessed the quickest)\n\nNote that not all sorters support every strategy."
+  AssignmentIdentifierTags:
+    type: object
+    properties:
+      nationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
+      internationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
+      customsNumbers:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
+      boxIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
+    additionalProperties: false
+    description: 'Contains a list of logistic or technical identifiers to identify a mailpiece within a specific context'
+  AssignmentMailpieceAttributes:
+    type: object
+    properties:
+      codingEventId:
+        type: string
+        description: "The Id of the coding event that triggered this destination assignment.\nIf this is not set, the no coding was done for this assignement."
+        maxLength: 200
+      recipientAddressKeys:
+        $ref: 'AssignmentRecipientAddressKeys'
+        description: 'Keys as result of mailpiece address coding.'
+      productCodes:
+        type: array
+        items:
+          $ref: 'AssignmentProductCode'
+        description: 'Detected product codes for the mailpiece.'
+      productModuleKeys:
+        type: array
+        items:
+          type: string
+        description: 'Product modules applied to the mailpiece'
+      propertyGroupKeys:
+        type: array
+        items:
+          type: string
+        description: 'Property groups applied to the mailpiece'
+      senderReference:
+        type: string
+        description: "Identifies the sender of the mailpiece.\nIt can be used to find sender services and customer addresing destinations.\nCurrently it is identical to the franking licesens but this will change in the future."
+      frankingLicense:
+        type: string
+        description: "The franking license define how a sender is billed for his mailpieces.\nIt MUST NOT be used to identify a sender for other purposes. Use the SenderReference for this.\nIt is currently extracted from the nationalMailpieceId."
+    required:
+      - productModuleKeys
+      - propertyGroupKeys
+    additionalProperties: false
+    description: 'Attributes evaluated/coded for a mailpiece.'
+  AssignmentMailpieceEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Globally Unique identifier for this mailpiece event.'
+        maxLength: 200
+      mailpieceGlobalKey:
+        type: string
+        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+        maxLength: 200
+      destinationAssigned:
+        $ref: 'DestinationAssigned'
+        description: 'The sorting control system has assigned a delivery destination as well as an outlet for the mailpiece.'
+    required:
+      - eventId
+      - mailpieceGlobalKey
+    additionalProperties: false
+    description: 'Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).'
+  AssignmentOutlet:
+    type: object
+    properties:
+      outletName:
+        type: string
+        description: 'An unique name within the sorting system.'
+        maxLength: 200
+    required:
+      - outletName
+    additionalProperties: false
+    description: "Mail is manually or automatically sorted to outlets.\nThis is typically the case for letter sorting processes where letters are first collected in a smaller container."
+  AssignmentProcessingLocation:
+    type: object
+    properties:
+      sortingLocationKey:
+        type: string
+        description: 'Unique identifier of the sorting location'
+        maxLength: 200
+      deliveryOfficePostcodeKey:
+        type: string
+        description: 'The postcode key of the delivery office of the delivery office where the mailpiece is processed next.'
+        maxLength: 200
+    additionalProperties: false
+    description: "Identifies the different locations where the Post operates, e.g.: sorting centers, post offices, offices, etc.\nExactly one of the properties must be set."
+  AssignmentProcessingType:
+    type: string
+    enum:
+      - FURTHER_PROCESSING
+      - DELIVERY
+      - SPECIAL_PROCESSING
+    description: "Defines the planned processing of the mail piece.\n- FURTHER_PROCESSING: The addressing destination was determined, but additional sorting cycles are planned for the mail piece\n- DELIVERY: The mail piece is ready for delivery\n- SPECIAL_PROCESSING: The mail piece caused a special sort and requires further processing. It cannot be determined what happens with the mailpiece at this time."
+  AssignmentProductCode:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 'Product code read and validated product code (PRZL).'
+      origin:
+        type: array
+        items:
+          $ref: 'AssignmentProductOrigin'
+        description: 'Origin of the product code.'
+    required:
+      - code
+      - origin
+    additionalProperties: false
+  AssignmentProductOrigin:
+    type: string
+    enum:
+      - READ
+      - PREANNOUNCEMENT
+      - MANUALLY_APPLIED
+      - AUTOMATIC
+      - SENDER_ORDER
+    description: "Specifies where this product code was read from.\n\nPREANNOUNCEMENT: The product is preannounced\nREAD: The product is read based on an image or text input\nMANUALLY_APPLIED: The product was added manually by a coder\nAUTOMATIC: The product was geneated during the sorting process\nSENDER_ORDER: The prodcut code was added because a sender order requried it"
+  AssignmentRecipientAddressKeys:
+    type: object
+    properties:
+      personAddressKey:
+        type: string
+        description: 'Identifies a person at a domiclie address (AMP-Key).'
+      houseKey:
+        type: string
+        description: 'Identifies the building address (e.g. domicile, poBox, pickPost / myPost 24 or other service address).'
+      streetKey:
+        type: string
+        description: 'Identifies the street (street key in AMPplus).'
+      postCodeKey:
+        type: string
+        description: 'Identifies the postcode (Ordnungsnummer Post (ONRP), Fremdschlüssel zu ASDP).'
+      countryKey:
+        type: string
+        description: 'Identifies the country (ID in the country-table in MDS).'
+      mailBoxKey:
+        type: string
+        description: 'Identifies the mailbox (HBK ID).'
+      communityKey:
+        type: string
+        description: 'Identifies the community (BFS-Nr Gemeinde, Fremdschlüssel zu ASDP).'
+      militaryKey:
+        type: string
+        description: 'MLZ (Militär Leit Zahl) if the mailpiece is sent to a military location (read by the coding system).'
+      deliveryPointType:
+        $ref: 'AssignmentDeliveryPointType'
+        description: 'Type of delivery point related to the address keys.'
+    required:
+      - deliveryPointType
+    additionalProperties: false
+    description: 'Resolved address keys.'
+  AssignmentRequestReason:
+    type: string
+    enum:
+      - SCANNER_TIMEOUT
+      - ITEM_INDUCTION_ERROR
+      - ITEM_DISCHARGE_ERROR
+      - ITEM_ERROR
+      - ITEM_TRACKING_ERROR
+      - ITEM_STRAY
+      - ITEM_OCCUPIED_TWICE_ERROR
+      - ITEM_NO_OUTLETGROUP
+      - ITEM_OUTLETGROUP_REQUIRED
+      - OUTLET_NOT_AVAILABLE
+      - OUTLET_UNKNOWN
+      - OUTLET_NO_CAPACITY
+      - OUTLET_MISSED
+      - UNDEFINED_ERROR
+    description: "The reason why the machine requests mailpiece attributes.\nList of values:\n- SCANNER_TIMEOUT: Item has reached the max allowed amount of scans and the last attempt was a \"no answer\" from scanner.\n- ITEM_INDUCTION_ERROR: Induction error item detected (occupied twice, wrong tray).\n- ITEM_DISCHARGE_ERROR: Discharge faults.\n- ITEM_ERROR: Item has a Logical error.\n- ITEM_TRACKING_ERROR: item was inducted with tracking fault.\n- ITEM_STRAY: Stray item detected.\n- ITEM_OCCUPIED_TWICE_ERROR: item was inducted on occupied tray.\n- ITEM_NO_OUTLETGROUP: No sorting information / outlet group has been received for this item.\n- ITEM_OUTLETGROUP_REQUIRED: The machine requires an outlet group.\n- OUTLET_NOT_AVAILABLE: No available chute could be found.\n- OUTLET_UNKNOWN: Logical destination not defined.\n- OUTLET_NO_CAPACITY: The destination outlet has no more capacity.\n- OUTLET_MISSED: Sortcode has been updated (push or repetitive requests), physical outlet already passed.\n- UNDEFINED_ERROR: Internal error happened."
+  AssignmentSortPlan:
+    type: object
+    properties:
+      sortplanId:
+        type: string
+        description: 'Id identifying the sort plan.'
+        maxLength: 200
+      name:
+        type: string
+        description: 'Human readable name of the sort plan.'
+        maxLength: 200
+      scenario:
+        type: string
+        description: 'Scenario name of the sort plan.'
+        maxLength: 200
+      version:
+        type: integer
+        description: 'Version of the given sortplan.'
+    required:
+      - sortplanId
+      - name
+      - scenario
+      - version
+    additionalProperties: false
+    description: 'The sort plan used to determine the sorting product.'
+  AssignmentSortReason:
+    type: string
+    enum:
+      - NO_ADDRESSING_DESTINATION_OR_SORT_REASON
+      - SORTER_DEVICE_ERROR
+      - TOO_MANY_SORTING_LOOPS
+      - RECIPIENT_ORDER
+      - NOT_IN_SORT_PLAN
+      - NO_SORTING_RULE_MATCHED
+      - LOOPING_MAILPIECE
+      - CARGO
+      - CUSTOMS_MISSING_DECLARATION
+      - CUSTOMS_BLOCKED
+      - CUSTOMS_INSPECTION
+      - CUSTOMS_EXTERNAL_INSPECTION
+      - ZALANDO_RED
+      - RECIPIENT_ORDER_FORWARD_ADDRESSEE
+      - RECIPIENT_ORDER_FORWARD_LOCATION
+      - RECIPIENT_ORDER_DELIVERY_DAY
+      - RECIPIENT_ORDER_FORWARD
+      - RECIPIENT_ORDER_SECOND_DELIVERY
+      - RECIPIENT_STANDING_ORDER_FORWARD
+      - RECIPIENT_STANDING_ORDER_FORWARD_PO_BOX
+      - RECIPIENT_STANDING_ORDER_DELAYED_PICKUP
+      - RECIPIENT_STANDING_ORDER_DELAYED_DELIVERY
+      - RECIPIENT_STANDING_ORDER_RETURN
+      - RECIPIENT_STANDING_ORDER_DELIVERY_SLOT
+      - SENDER_ORDER_CHANGE
+      - TRANSFER_FORWARD
+      - TRANSFER_RETURN
+      - TRANSFER
+      - THERMO_CARE_AMBIENT_FOR_STORAGE
+      - THERMO_CARE_COLD_FOR_STORAGE
+      - DISTRIBUTION_MONDAY
+      - DISTRIBUTION_TUESDAY
+      - DISTRIBUTION_WEDNESDAY
+      - DISTRIBUTION_THURSDAY
+      - DISTRIBUTION_FRIDAY
+      - DISTRIBUTION_SATURDAY
+      - EMPTY_DISPOBOX
+      - MULTIPLE_IDENT_CODES
+      - MAILPIECE_WITHOUT_IDENT_CODE
+      - NOT_IN_DELIVERY_PLAN
+      - NO_SPECIAL_SORT_MAPPING
+    description: "Lists the different reasons why sorting to an adressing destination was not possible.\n  - NO_ADDRESSING_DESTINATION_OR_SORT_REASON:  Sorting process could not find an address or a sort reason.\n  - SORTER_DEVICE_ERROR: Error from the sorting device.\n  - TOO_MANY_SORTING_LOOPS: Indicates that the number of sorting pipeline executions has reached its threshold.\n  - RECIPIENT_ORDER: General reason for all recipient order, once the specific recipient orders have been implemented, this can be replaced.\n  - NOT_IN_SORT_PLAN: Indicates that for the given address or special sort, no matching information was found in sortplan.\n  - NO_SORTING_RULE_MATCHED: No sorting rule was execute for a mailpiece.\n  - LOOPING_MAILPIECE: Mailpiece is looping between different centers.\n  - CARGO: Is set if a mailpiece is identified as cargo (too large or heavy to be processed normally).\n  - CUSTOMS_MISSING_DECLARATION: There is no customs information for the current mailpiece.\n  - CUSTOMS_BLOCKED: Mailpiece is blocked from passing customs.\n  - CUSTOMS_INSPECTION: Indicates that a mailpiece needs to be examined by customs authority.\n  - CUSTOMS_EXTERNAL_INSPECTION: Mailpiece will be examined by an external authority, e.g. precious metal.\n  - ZALANDO_RED: Indicates a missing content declaration of a returning mailpiece which will cross customs (e.g. Zalando returns).\n  - RECIPIENT_ORDER_FORWARD_ADDRESSEE: The recipient has indicated that the mailpiece should be forwarded to another addressee.\n  - RECIPIENT_ORDER_FORWARD_LOCATION: The recipient has indicated that the mailpiece should be forwarded to another location (e.g. PoBox).\n  - RECIPIENT_ORDER_DELIVERY_DAY: The recipient has indicated that the mailpiece should be delivered on a specific day.\n  - RECIPIENT_ORDER_FORWARD: General reason to indicate that a mailpiece will be forwarded.\n  - RECIPIENT_ORDER_SECOND_DELIVERY: Indicates that a mailpiece couldn't be delivered successfully and will be delivered again.\n  - RECIPIENT_STANDING_ORDER_FORWARD: Recipient has a standing forward order in place (e.g. when moving to a new location and mail traffic should be forwarded to  the new address).\n  - RECIPIENT_STANDING_ORDER_FORWARD_PO_BOX: Recipient has a standing forward order in place to forward mailpieces to a PoBox.\n  - RECIPIENT_STANDING_ORDER_DELAYED_PICKUP: Mailpiece will be kept back until the customer picks it up.\n  - RECIPIENT_STANDING_ORDER_DELAYED_DELIVERY: Mailpiece will be kept back for x amount of time and then delivered again.\n  - RECIPIENT_STANDING_ORDER_RETURN: Mailpiece will be returned to sender.\n  - RECIPIENT_STANDING_ORDER_DELIVERY_SLOT: Mailpiece will be delivered on a specific delivery slot.\n  - SENDER_ORDER_CHANGE: Indicates a immediate change in the sorting process (e.g. suspicion for fraud -> mailpiece needs to be returned and not delivered).\n  - TRANSFER_FORWARD: A transfer product code was detected indicating a forward address.\n  - TRANSFER_RETURN: A transfer product code was detected indicating that the mailpiece should be returned.\n  - TRANSFER: General reason to indicate a transfer case has been detected but the specific type is unknown.\n  - THERMO_CARE_AMBIENT_FOR_STORAGE: A mailpiece with special temperature related storage requirements. These cannot be sorted for delivery on a friday. Mailpieces with ThermoCare need to be stored over the weekend in storage with the correct temperature.\n  - THERMO_CARE_COLD_FOR_STORAGE: A mailpiece with special temperature related storage requirements. These cannot be sorted for delivery on a friday. Mailpieces with ThermoCare need to be stored over the weekend in storage with the correct temperature.\n  - DISTRIBUTION_MONDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_TUESDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_WEDNESDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_THURSDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_FRIDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_SATURDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - EMPTY_DISPOBOX: Current mailpiece is an empty dispobox, this reason will be used to eject the box at the correct ramp near the collection point.\n  - MULTIPLE_IDENT_CODES: Multiple mailpiece identifications where found on the mailpiece.\n  - MAILPIECE_WITHOUT_IDENT_COD: No identification was found for the mailpiece.\n  - NOT_IN_DELIVERY_PLAN: A lookup in the Delivery Plan has returned no results.\n  - NO_SPECIAL_SORT_MAPPING: No special sort mapping was found for a sort reason."
+  AssignmentSortingEndpointGroup:
+    type: object
+    properties:
+      sortingEndpointGroupId:
+        type: string
+        description: 'Id unique within a sort plan. Used for statistics.'
+        maxLength: 200
+      sortingEndpoints:
+        type: array
+        items:
+          $ref: 'AssignmentSortingEndpoint'
+        description: 'The list of the trays or container positions to sort into.'
+        minItems: 1
+      distributionStrategy:
+        $ref: 'AssignmentDistributionStrategy'
+        description: 'Defines the distribution strategy used when multiple Outlets are available.'
+    required:
+      - sortingEndpointGroupId
+      - sortingEndpoints
+      - distributionStrategy
+    additionalProperties: false
+    description: "The sorting endpoint group defines the possible destinations for a mail piece in the sorting process.\nThis can be a physical trays of a sorting machine or container positions."
+  AssignmentSortingEndpoint:
+    type: object
+    properties:
+      containerPositionManuallyAccessible:
+        $ref: 'AssignmentContainerPositionManuallyAccessible'
+      containerPositionViaOutlet:
+        $ref: 'AssignmentContainerPositionViaOutlet'
+      outlet:
+        $ref: 'AssignmentOutlet'
+    additionalProperties: false
+    description: 'The target for a mailpiece at the end of a sorting cycle.'
+  AssignmentSortingParameters:
+    type: object
+    properties:
+      postDayStart:
+        type: string
+        description: 'Time [HH:mm] when the post day change happens.'
+        pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+      postDay:
+        $ref: 'DateTime'
+        description: 'Current post day during sorting process step.'
+      masterDataReleaseVersion:
+        type: integer
+        description: 'Compiled version of used release data sets.'
+      sortPlan:
+        $ref: 'AssignmentSortPlan'
+        description: 'Sort plan used to determine the sorting product and the outlet.'
+      sortingProcess:
+        $ref: 'AssignmentSortingProcess'
+        description: 'Provides information on where the sorting process was triggered (e.g. automatic or manual or bulk).'
+    required:
+      - postDayStart
+      - postDay
+      - masterDataReleaseVersion
+      - sortPlan
+      - sortingProcess
+    additionalProperties: false
+    description: 'Parameters active during the sorting process step impacting the result.'
+  AssignmentSortingProcess:
+    type: string
+    enum:
+      - AUTOMATIC
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_LIGHT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_AUTOMATIC
+    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods"
+  AssignmentSortingProduct:
+    type: object
+    properties:
+      sortingProductName:
+        type: string
+        description: 'Sorting product lookup result for either addressingDestinationResult or specialSortResult.'
+        maxLength: 200
+      propertyGroupKey:
+        type: string
+        description: 'The property group key that was used to resolve this sorting product.'
+        maxLength: 200
+      sweepClearanceTime:
+        type: string
+        description: 'The clearance time of the selected sweep from the sorting product.'
+        pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+    required:
+      - sortingProductName
+    additionalProperties: false
+    description: 'Applied sorting product from sort plan.'
+  AssignmentSortingResult:
+    type: object
+    properties:
+      expectedDeliveryDate:
+        $ref: 'DateTime'
+        description: 'Expected delivery date of the mailpiece with consideration of current inter center traffic.'
+      addressingDestinationResult:
+        $ref: 'AssignmentAddressingDestinationResult'
+        description: 'Sorting result for delivery to an addressing destination.'
+      specialSortResult:
+        $ref: 'AssignmentSpecialSortResult'
+        description: 'Sorting result for special handling (services or manual processing).'
+      sortingEndpointGroup:
+        $ref: 'AssignmentSortingEndpointGroup'
+        description: 'The SortingEndpointGroup that was resolved from the sortplan and communicated to the sorting unit.'
+      sortingProduct:
+        $ref: 'AssignmentSortingProduct'
+        description: 'Evaluated sorting product in the sortplan for this mailpiece.'
+      intendedProcessing:
+        $ref: 'AssignmentProcessingType'
+        description: "The planned processing after this sorting.\nThis is used to distinguish whether another sorting cycle is planned or whether the mail piece will be handed over for delivery."
+      nextProcessingLocation:
+        $ref: 'AssignmentProcessingLocation'
+        description: "Defines the intended location where the mail piece is processed next. Note that this is not necessarly another sorting location\nand that this just represents the intention at the moment when this event was generated.\nThis information can be used to search for missing mail pieces (ie. where should it have been sent to?)"
+    required:
+      - expectedDeliveryDate
+      - sortingEndpointGroup
+      - sortingProduct
+      - intendedProcessing
+    additionalProperties: false
+    description: "Result of the sorting process step.\nEither addressingDestinationResult or specialSortResult must be present, but never both."
+  AssignmentSortingUnit:
+    type: object
+    properties:
+      sortingUnitKey:
+        type: string
+        description: 'Unique key identifying the sorting unit.'
+        maxLength: 200
+      locationKey:
+        type: string
+        description: 'Unique key identifying the location.'
+        maxLength: 200
+    required:
+      - sortingUnitKey
+      - locationKey
+    additionalProperties: false
+    description: "A sorting unit is any constellation of devices at a given location/building using the same sort plan for sorting mailpieces\r\nThe default definition of a sorting unit is an automatic sorter with an manual coding station."
+  AssignmentSpecialSortResult:
+    type: object
+    properties:
+      sortReason:
+        $ref: 'AssignmentSortReason'
+        description: "Specifies what sort reason caused this special sort. This field is null\nif this special sort was not caused by a sort reason.\nExactly one of sortReason, codingReason or requestReason must be set."
+      codingReason:
+        $ref: 'AssignmentCodingReason'
+        description: "Specifies what coding reason caused this special sort. This field is null\nif this special sort was not caused by a response from coding.\nExactly one of sortReason, codingReason or requestReason must be set."
+      requestReason:
+        $ref: 'AssignmentRequestReason'
+        description: "Specifies what request reason caused this special sort. This field is null\nif this special sort was not caused by a sorting unit.\nExactly one of sortReason, codingReason or requestReason must be set."
+      specialSortKey:
+        type: string
+        description: 'The special sort that was selected for this mailpiece.'
+        maxLength: 200
+      specialSortName:
+        type: string
+        description: 'The name of the special sort that was selected for this mailpiece.'
+        maxLength: 200
+    required:
+      - specialSortKey
+      - specialSortName
+    additionalProperties: false
+    description: 'Special sort result evaluated for the mailpiece'
+  DestinationAssigned:
+    type: object
+    properties:
+      sortingTime:
+        $ref: 'DateTime'
+        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
+      processingItemId:
+        type: string
+        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
+        maxLength: 32
+      sortingCycleId:
+        type: string
+        description: "Globally unique identifier for the sorting cycle.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and ends with the discharge of the mailpiece."
+        maxLength: 200
+      timestamp:
+        $ref: 'DateTime'
+        description: "Date & time of the event occurance. This is very close to the time when the corresponding\r\nmessage is sent to the sorting unit."
+      idTags:
+        $ref: 'AssignmentIdentifierTags'
+        description: 'Barcodes and other tags identifying the mailpiece.'
+      sortingUnit:
+        $ref: 'AssignmentSortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
+      sortingParameters:
+        $ref: 'AssignmentSortingParameters'
+        description: 'Parameters that where active during the sorting cycle impacting the result.'
+      mailpieceAttributes:
+        $ref: 'AssignmentMailpieceAttributes'
+        description: 'Attributes evaluated, coded or detected for the processed mailpiece.'
+      sortingResult:
+        $ref: 'AssignmentSortingResult'
+        description: 'The infomration that was calculated for this mailpiece.'
+    required:
+      - sortingTime
+      - processingItemId
+      - sortingCycleId
+      - timestamp
+      - sortingUnit
+      - sortingParameters
+      - mailpieceAttributes
+      - sortingResult
+    additionalProperties: false
+    description: 'Evaluated destination assignment result.'
+  AddressProducer:
+    type: string
+    enum:
+      - PREANNOUNCEMENT
+      - RECOGNITION_ADDRESS
+      - RECOGNITION_ADDRESS_RETRY
+      - VIDEO_CODING_ADDRESS
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_SCANNING
+    description: "PREANNOUNCEMENT  Component which validates and publishes preannouncement data\nRECOGNITION_ADDRESS  Component which reads address elements on an image\nRECOGNITION_ADDRESS_RETRY    Component which reads address elements on an image in a following workflow (e.g. after VCS ROI or VCS Postcode)\nVIDEO_CODING_ADDRESS Component where address information is remotely captured or entered by a coder based on an image\nMANUAL_CODING_REJECT Component where barcodes, weight, dimensions and address information are captured or entered (manually)\nMANUAL_CODING_BULK   Component where barcodes, weight, dimensions and address information for bulky goods are captured or entered (manually or partially automated)\nMANUAL_CODING_BULK_SCANNING Component where a coder manually captures barcodes and other specific information for bulky goods"
+  AddressSource:
+    type: object
+    properties:
+      producer:
+        $ref: 'AddressProducer'
+        description: 'Component which provided the information'
+      instance:
+        type: string
+        description: 'Instance of the device'
+      sortingUnit:
+        $ref: 'SortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed'
+    required:
+      - producer
+      - instance
+      - sortingUnit
+    additionalProperties: false
+    description: "Describes which system provided the information. This is meant to be used for diagnositcs\nand should not be used to infer any business cases."
+  Address:
+    type: object
+    properties:
+      person:
+        $ref: 'Person'
+        description: 'Information regarding a person'
+      additionalAddressLine1:
+        type: string
+        description: "Personalized and additional address information (e.g.c/o-Adresse)\n(AMPplus: Adresszusatz 1)"
+        maxLength: 65
+      additionalAddressLine2:
+        type: string
+        description: "Unpersonalized and not official information (e.g. Chalet Alpenblick)\n(AMPplus: Adresszusatz 2)"
+        maxLength: 65
+      locality:
+        $ref: 'Locality'
+        description: 'Locality of an address'
+      deliveryPoint:
+        $ref: 'DeliveryPoint'
+        description: 'Delivery point of an address'
+      addressLines:
+        type: array
+        items:
+          type: string
+        description: 'Address lines (raw, unvalidated address data submitted by the customer)'
+      source:
+        $ref: 'AddressSource'
+        description: 'Source of the address'
+      coderId:
+        type: string
+        description: 'Identification of the coder which typed the address'
+        maxLength: 50
+      appliedCodingRules:
+        type: array
+        items:
+          type: string
+        description: 'Coding rules which were applied to resolve the address'
+      state:
+        $ref: 'PersonalizedAddressState'
+        description: 'Indicates state of a validated person living at a specific address'
+    required:
+      - source
+    additionalProperties: false
+    description: 'Address captured by an enrichment device or delivered by a preannouncement system'
+  Coded:
+    type: object
+    properties:
+      timestamp:
+        $ref: 'DateTime'
+        description: 'Time when the event is published'
+      processingItemId:
+        type: string
+        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
+      sortingCycleId:
+        type: string
+        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
+      idTags:
+        $ref: 'IdentifierTags'
+        description: 'Contains a list of ids identifying the processing item.'
+      sortingUnit:
+        $ref: 'SortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed'
+      codingResult:
+        $ref: 'CodingResult'
+        description: "Data captured during a workflow in the coding system\r\nThis may contain aggregated data from multiple enrichment steps"
+      source:
+        $ref: 'EventSource'
+        description: 'The system which publishes the event'
+      workflow:
+        $ref: 'Workflow'
+        description: 'Detailed insights in the internal workflow steps which occured to deliver the information in this event'
+    required:
+      - timestamp
+      - processingItemId
+      - sortingCycleId
+      - sortingUnit
+      - source
+      - workflow
+    additionalProperties: false
+  CodingResult:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          $ref: 'Address'
+        description: 'Contains information regarding the address located on a mailpiece or transfered by a preannouncement system'
+      products:
+        type: array
+        items:
+          $ref: 'Product'
+        description: 'Contains validated products, physically located on a mailpiece or transfered by a preannouncement system'
+      informationCarriers:
+        type: array
+        items:
+          $ref: 'InformationCarrier'
+        description: 'Information which were physically present on the parcel (e.g. barcodes)'
+      serviceApplied:
+        $ref: 'ServiceApplication'
+        description: 'Services applied during the coding.'
+      serviceRequested:
+        $ref: 'ServiceRequest'
+        description: 'New services requested during the coding, to be applied in the sorting control system.'
+      images:
+        type: array
+        items:
+          $ref: 'Image'
+        description: 'The images captured during coding'
+    additionalProperties: false
+    description: 'Information captured by the coding systems during coding'
+  Day:
+    type: string
+    enum:
+      - MONDAY
+      - TUESDAY
+      - WEDNESDAY
+      - THURSDAY
+      - FRIDAY
+      - SATURDAY
+  DeliveryPointState:
+    type: string
+    enum:
+      - APPROVED
+      - IN_SERVICE
+    description: "APPROVED    Planned and confimed but not valid yet\r\nIN_SERVICE   In service and valid"
+  DeliveryPointType:
+    type: string
+    enum:
+      - DOMICILE
+      - PICKPOST
+      - PARCEL_TERMINAL
+      - POBOX
+      - POSTE_RESTANTE
+      - COMPANY_POSTCODE
+      - INTERNATIONAL
+      - MILITARY
+      - INTERNAL_POSTCODE
+    description: "DOMICILE = Domiziladresse\r\nPICK_POST = Pickpost\r\nPARCEL_TERMINAL = myPost24\r\nPOBOX = Post Office Box (Postfach)\r\nPOSTE_RESTANTE = Retain at swiss post (Postlagernd)\r\nCOMPANY_POSTCODE = Company Postcode indicates (FirmenPLZ)\r\nINTERNATIONAL = International address (Export)\r\nMILITARY = Military address\r\nINTERNAL_POSTCODE = Swiss post internal postcode"
+  DeliveryPoint:
+    type: object
+    properties:
+      houseNumber:
+        $ref: 'Int'
+        description: 'House number of an address (e.g. Musterstrasse ->14<-)'
+      houseNumberExtension:
+        type: string
+        description: 'House number extension of an address (e.g. Musterstrasse 14 ->a<-)'
+        maxLength: 6
+      houseKey:
+        $ref: 'KeyWithConfidence'
+        description: 'Identifies the address physically located on the mailpiece (e.g. domicile, poBox, pickPost, parcel terminal / myPost 24 or other service address)'
+      mailBoxKey:
+        $ref: 'KeyWithConfidence'
+        description: 'Identifies the mailbox physically located on the mailpiece (HBK ID)'
+      addressedObjectIdentifier:
+        type: string
+        description: "Identifier for special address elements (e.g. floor door- or appartementnumber)\n(AMPplus: Stockwerk / Tür- oder Wohnungsnummer)"
+        maxLength: 10
+      militaryKey:
+        $ref: 'KeyWithConfidence'
+        description: 'MLZ physically located on the mailpiece (read by the coding system)'
+      deliveryPointType:
+        $ref: 'DeliveryPointType'
+        description: 'Type of a delivery point'
+      poBoxNumber:
+        type: string
+        description: "Post Box Number which is located in an address\n(AMPplus: Postfachnummer)"
+        maxLength: 10
+      customerNumber:
+        type: string
+        description: 'Customernumber (pickPost- or parcel terminal / myPost24 number)'
+        maxLength: 8
+      state:
+        $ref: 'DeliveryPointState'
+        description: 'Indicates state of a validated delivery point'
+    additionalProperties: false
+    description: 'Information related to the delivery point of a recipient'
+  DeliverySlot:
+    type: object
+    properties:
+      dayOfTheWeek:
+        $ref: 'Day'
+        description: 'Day of the week when the mailpiece should be delivered. Only available in case of serviceType = DELIVERY_SLOT'
+      timeWindow:
+        $ref: 'TimeWindow'
+        description: 'Time window when the mailpiece should be delivered. Only available in case of serviceType = DELIVERY_SLOT'
+    additionalProperties: false
+    description: 'Information about the desired delivery day and time of the customer'
+  DetectedElements:
+    type: string
+    enum:
+      - ADDRESS_REGION
+      - BARCODE_REGION
+    description: "ADDRESS_REGION  This image contains an address region of interest (ROI)\r\nBARCODE_ROI  This image contains a barcode region of interest (ROI)"
+  DetectionError:
+    type: string
+    enum:
+      - MULTIPLE_MAILPIECES_RECOGNIZED
+      - NO_MAILPIECE_RECOGNIZED
+      - IMAGE_ERROR
+      - OTHER
+    description: "MULTIPLE_MAILPIECES_RECOGNIZED   More than one mailpiece detected on an image\r\nNO_MAILPIECE_RECOGNIZED  No mailpiece detected on the image\r\nIMAGE_ERROR Error in image (e.g. poor quality)\r\nOTHER Other cases"
+  EnrichmentStep:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Internal id of the specific internal enrichment workflow'
+      order:
+        $ref: 'Int'
+        description: 'Order of the enrichment'
+      recognition:
+        $ref: 'RecognitionStep'
+        description: 'Step which occured in the recognition in the ocr engine'
+      video:
+        $ref: 'VideoCodingStep'
+        description: 'Step which occured in video coding'
+      manual:
+        $ref: 'ManualCodingStep'
+        description: 'Step which occured in manual coding'
+      validation:
+        $ref: 'ValidationStep'
+        description: 'Step which occured in validation'
+      startTime:
+        $ref: 'DateTime'
+        description: 'Start time of the enrichment'
+      endTime:
+        $ref: 'DateTime'
+        description: 'End time of the enrichment'
+    required:
+      - eventId
+      - startTime
+      - endTime
+    additionalProperties: false
+  EventProducer:
+    type: string
+    enum:
+      - IMAGE_CONTROLLER
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_SCANNING
+    description: "IMAGE_CONTROLLER Component which is responsible for the internal enrichment workflow of the coding systems (PieceManager)\nMANUAL_CODING_REJECT Component where barcodes, weight, dimensions and address information are captured or entered (manually)\nMANUAL_CODING_BULK   Component where barcodes, weight, dimensions and address information for bulky goods are captured or entered (manually or partially automated)\nMANUAL_CODING_BULK_SCANNING Component where a coder manually captures barcodes and other specific information for bulky goods"
+  EventSource:
+    type: object
+    properties:
+      producer:
+        $ref: 'EventProducer'
+        description: 'Device which provided the information'
+      instance:
+        type: string
+        description: 'Instance of the device'
+    required:
+      - producer
+      - instance
+    additionalProperties: false
+    description: "Describes which system provided the information. This is meant to be used for diagnositcs\nand should not be used to infer any business cases."
+  Face:
+    type: string
+    enum:
+      - TOP
+      - LEFT
+      - RIGHT
+      - FRONT
+      - REAR
+      - BOTTOM
+      - FRONT_LEFT
+      - FRONT_RIGHT
+      - REAR_LEFT
+      - REAR_RIGHT
+  IdentifierTags:
+    type: object
+    properties:
+      nationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to track a mail item within the country.\nThe id is printed on the mailpiece by the sender."
+      internationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of international identifiers to track a mail item internationally.\nThe id is printed on the mailpiece by the sender."
+      nationalLetterIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to track a letter item within the country.\nThe id can only be created once during a machine sorting cycle and printed on the letter."
+      internationalLetterIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of Universal Postal Union Identifier (UPU-Id) as technical identifiers to track an letter item internationally.\nThe id can only be created once during a machine sorting cycle and printed on the letter.\nRemarks: BDE converts the UPU-Id into a shorter version"
+      customerLetterIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customer to track a letter item within the country.'
+      customsNumbers:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customs to track an imported mail item within the country.'
+      boxIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to track a Dispobox within the country.'
+      sortingProcessId:
+        type: string
+        description: 'The technical identifier to track an mail item during the complete sorting process. UPU-Id is set as default.'
+        maxLength: 200
+      sortingProcessStepId:
+        type: string
+        description: "Contains the Unique Mailpiece-Image Identifier (UMI) as machine independent technical identifier to reference a machine sorting cycle of a mail item. The identifier is used to access the mail images.\nThe id is created during every machine sorting cycle."
+        maxLength: 200
+    additionalProperties: false
+    description: 'Contains a list of logistic or technical identifiers to track a mail item within a specific context.'
+  ImageProducer:
+    type: string
+    enum:
+      - DIMENSION_WEIGHT_SCANNING
+      - VOLUME_SCANNER
+    description: "DIMENSION_WEIGHT_SCANNING: Component in which cameras capture images in the automated sorting process\nVOLUME_SCANNER: Component where an image is captured in the manual coding bulk proccess"
+  ImageSource:
+    type: object
+    properties:
+      producer:
+        $ref: 'ImageProducer'
+        description: 'Component which provided the information'
+      instance:
+        type: string
+        description: 'Instance of the device'
+      sortingUnit:
+        $ref: 'SortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed'
+    required:
+      - producer
+      - instance
+      - sortingUnit
+    additionalProperties: false
+    description: "Describes which system provided the information. This is meant to be used for diagnositcs\nand should not be used to infer any business cases."
+  Image:
+    type: object
+    properties:
+      key:
+        type: string
+        description: 'Key assigned to an image'
+        maxLength: 200
+      source:
+        $ref: 'ImageSource'
+        description: 'System / device which captured image'
+      mainFace:
+        type: boolean
+        description: 'Indicates the main image'
+      detectedElements:
+        type: array
+        items:
+          $ref: 'DetectedElements'
+        description: 'Indicates the ROIs found on the image'
+      detectionError:
+        $ref: 'DetectionError'
+        description: "Indicates if there is an error regarding the image\nACTION: will become mandatory (mandatory since version:5.1)"
+      face:
+        $ref: 'Face'
+        description: 'Face of the parcel on which the image is located'
+    required:
+      - key
+      - source
+      - mainFace
+      - face
+    additionalProperties: false
+    description: 'Image information used by coding system'
+  InformationCarrierProducer:
+    type: string
+    enum:
+      - PREANNOUNCEMENT
+      - DIMENSIONING_WEIGHTING_SCANNING
+      - OCR_BARCODE
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_SCANNING
+    description: "PREANNOUNCEMENT  Component which validates and publishes preannouncement data\nDIMENSIONING_WEIGHTING_SCANNING Component which reads barcodes, captures dimensions and weights the parcel\nOCR_BARCODE  Component which reads / captures barcodes on an image\nMANUAL_CODING_REJECT Component where barcodes, weight, dimensions and address information are captured or entered (manually)\nMANUAL_CODING_BULK   Component where barcodes, weight, dimensions and address information for bulky goods are captured or entered (manually or partially automated)\nMANUAL_CODING_BULK_SCANNING Component where a coder manually captures barcodes and other specific information for bulky goods"
+  InformationCarrierSource:
+    type: object
+    properties:
+      producer:
+        $ref: 'InformationCarrierProducer'
+        description: 'Component which provided the information'
+      instance:
+        type: string
+        description: 'Instance of the device'
+      sortingUnit:
+        $ref: 'SortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed'
+    required:
+      - producer
+      - instance
+      - sortingUnit
+    additionalProperties: false
+    description: "Describes which system provided the information. This is meant to be used for diagnositcs\nand should not be used to infer any business cases."
+  InformationCarrier:
+    type: object
+    properties:
+      symbology:
+        $ref: 'Symbology'
+        description: 'Symbology of an information carrier'
+      value:
+        type: string
+        description: 'Value of an information carrier'
+      source:
+        type: array
+        items:
+          $ref: 'InformationCarrierSource'
+        description: 'Source of an information carrier. An information carrier can be captured by multiple devices during an enrichment worfklow'
+      coderId:
+        type: string
+        description: 'Identification of the coder which scanned or typed the information carrier'
+        maxLength: 50
+    required:
+      - symbology
+      - value
+      - source
+    additionalProperties: false
+    description: 'Identified and captured information carrier (e.g. barcodes, logos)'
+  KeyWithConfidence:
+    type: object
+    properties:
+      key:
+        type: string
+        description: 'Value of a key'
+      confidence:
+        $ref: 'Int'
+        description: 'Confidence of a key (based on validation with masterdata and coding rules)'
+    required:
+      - key
+      - confidence
+    additionalProperties: false
+    description: 'Key with confidence base on validation'
+  Language:
+    type: string
+    enum:
+      - DE
+      - FR
+      - IT
+      - EN
+    description: Language
+  LegalForm:
+    type: string
+    enum:
+      - INDIVIDUAL
+      - SIMPLE_PARTNERSHIP
+      - GENERAL_PARTNERSHIP
+      - LIMITED_PARTNERSHIP
+      - PARTNERSHIP_LIMITED_BY_SHARES
+      - AG_LTD_PUBLIC_LIMITED_COMPANY
+      - GMBH_SARL_PRIVATE_LIMITED_COMPANY
+      - COOPERATIVE
+      - ASSOCIATION
+      - FOUNDATION
+      - BRANCH_OF_FOREIGN_AG_LTD
+      - BRANCH_OF_FOREIGN_SARL
+      - FEDERAL_ADMINISTRATION
+      - CANTONAL_ADMINISTRATION
+      - DISTRICT_ADMINISTRATION
+      - MUNICIPAL_ADMINISTRATION
+      - PUBLIC_ENTITY_ADMINISTRATION
+      - STATE_RECOGNIZED_CHURCH
+      - FOREIGN_LEGAL_FORM_BRANCH
+      - FOREIGN_COUNTRY_EMBASSY
+      - INERNATIONAL_ORGANISZATION
+      - FEDERAL_WORKS
+      - CANTONAL_WORKS
+      - DISTRICT_WORKS
+      - MUNICIPAL_WORKS
+      - PUBLIC_ENTITY_WORKS
+      - POSTAL_ORGANISATIONAL_UNITS
+      - SUBSIDIARIES
+    description: "Rechtsform, wird nur bei Geschäftspersonen abgefüllt\r\nINDIVIDUAL = Einzelfirma\r\nSIMPLE_PARTNERSHIP = Einfache Gesellschaft\r\nGENERAL_PARTNERSHIP = Kollektivgesellschaft\r\nLIMITED_PARTNERSHIP = Kommanditgesellschaft\r\nPARTNERSHIP_LIMITED_BY_SHARES = Kommanditaktiengesellschaft\r\nAG_LTD_PUBLIC_LIMITED_COMPANY = Aktiengesellschaft/LTD\r\nGMBH_SARL_PRIVATE_LIMETED_COMPANY = GMBH/SARL\r\nCOOPERATIVE = Genossenschaft\r\nASSOCIATION = Verein\r\nFOUNDATION = Stiftung\r\nBRANCH_OF_FOREIGN_AG_LTD =\r\nBRANCH_OF_FOREIGN_SARL = Ausländische GMBH-Filiale;SARL\r\nFEDERAL_ADMINISTRATION = Verwaltung des Bundes\r\nCANTONAL_ADMINISTRATION = Verwaltung des Kantons\r\nDISTRICT_ADMINISTRATION = Verwaltung des Bezirks\r\nMUNICIPAL_ADMINISTRATION = Verwaltung der Gemeinde\r\nPUBLIC_ENTITY_ADMINISTRATION = öffentliche Körperschaft (Verw.)\r\nSTATE_RECOGNIZED_CHURCH = Staatlich anerkannte Kirche\r\nFOREIGN_LEGAL_FORM_BRANCH = Ausländische Rechtsform (Filiale)\r\nFOREIGN_COUNTRY_EMBASSY = Ausländischer Staat (Botschaft)\r\nINERNATIONAL_ORGANISZATION = Internationale Organisation\r\nFEDERAL_WORKS = Betriebe des Bundes\r\nCANTONAL_WORKS = Betriebe des Kantons\r\nDISTRICT_WORKS = Betriebe des Bezirks\r\nMUNICIPAL_WORKS = Betriebe der Gemeinde\r\nPUBLIC_ENTITY_WORKS = öffentliche Körperschaft (Betriebe)\r\nPOSTAL_ORGANISATIONAL_UNITS = Organisaitonseinheit der Post\r\nSUBSIDIARIES = Konzerngesellschaft der Post"
+  Locality:
+    type: object
+    properties:
+      streetName:
+        type: string
+        description: "Name of the streed (e.g. Musterstrasse)\n(AMPplus: Strassenbezeichnung)"
+        maxLength: 60
+      streetKey:
+        $ref: 'KeyWithConfidence'
+        description: 'Identifies the street physically located on the mailpiece (street key in AMPplus)'
+      city:
+        type: string
+        description: "City\n(AMPplus: Ort)"
+        maxLength: 60
+      addressPostcode4:
+        type: string
+        description: "4 digit postcode\n(AMPplus: Postleitzahl)"
+        maxLength: 4
+      addressPostcodeExtension:
+        type: string
+        description: "Additional information related to a city\nmultiple purposes, see examples:\n56, 57 = Zoll, Import/Export\n60 = Briefzustellung\n61 = Postfach\n70 = Paketzustellung\n72 = Expresszustellung\n74 = Postautodienst\n75 = Kaserne"
+        maxLength: 2
+      postCodeKey:
+        $ref: 'KeyWithConfidence'
+        description: 'Identifies the postcode physically located on the mailpiece (Ordnungsnummer Post (ONRP), Fremdschlüssel zu ASDP)'
+      communityKey:
+        $ref: 'KeyWithConfidence'
+        description: 'Identifies the community physically located on the mailpiece (BFS-Nr Gemeinde, Fremdschlüssel zu ASDP)'
+      countryCode:
+        type: string
+        description: 'ISO-Code of the country (2-digit)'
+        maxLength: 2
+      countryKey:
+        $ref: 'KeyWithConfidence'
+        description: 'Identifies the country physically located on the mailpiece (ID in the country-table in MDS)'
+    additionalProperties: false
+    description: 'Information related to the locality of an address'
+  ManualCodingStep:
+    type: string
+    enum:
+      - REJECT
+      - BULK
+      - BULK_SCANNING
+    description: "REJECT Component where a coder manually captures barcodes and enters address information\nBULK   Component where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\nBULK_SCANNING Component where a coder manually captures barcodes and other specific information for bulky goods"
+  ManualRejectReason:
+    type: string
+    enum:
+      - NO_ADDRESS_ON_MAILPIECE
+    description: 'NO_ADDRESS_ON_MAILPIECE = Reject because mailpiece either has no visible address, is damaged or in case it is not a Kleinware doesn''t contain a barcode.'
+  PaymentMethod:
+    type: string
+    enum:
+      - AUTOMATIC
+      - AT_DELIVERY
+      - BY_SENDER
+      - TAX_FREE
+      - BY_INVOICE
+    description: "AUTOMATIC = The tax is invoiced automatically (Abrechnung via Pve)\r\nBY_SENDER = The tax is paid by the sender\r\nAT_DELIVERY = The tax has to be paid at delivery. Franking Value will be printed on the address label\r\nTAX_FREE = 0.00 will be printed on the address label\r\nBY_INVOICE = The tax will be paid by invoice"
+  PersonState:
+    type: string
+    enum:
+      - ACTIVE
+      - DECEASED_EXPIRED
+      - RELOCATED
+      - PROVISIONAL
+    description: "ACTIVE   The person is active and in service\r\nDECEASED_EXPIRED THE person is dead or the company is extinct\r\nRELOCATED    The person moved away without giving the new address\r\nPROVISIONAL  provisional entity"
+  PersonType:
+    type: string
+    enum:
+      - PRIVATE
+      - BUSINESS
+    description: "person type\r\nPRIVATE = Privatperson\r\nBUSINESS = Geschäftsperson"
+  Person:
+    type: object
+    properties:
+      salutation:
+        type: string
+        description: "Element that uses a word, groups of words, acronyms, or abbreviations to indicate the person's or group's marital status or addressee type (e.g. Herr / Frau).\n(AMPplus: Anrede)"
+        maxLength: 80
+      title:
+        type: string
+        description: 'Title of an addressee'
+        maxLength: 30
+      firstName:
+        type: string
+        description: "Firstnames of an addressee\n(AMPplus: Vorname)"
+        maxLength: 75
+      lastName:
+        type: string
+        description: "Lastname of an addressee\n(AMPplus: Name)"
+        maxLength: 80
+      suffix:
+        type: string
+        description: 'Suffix of the name (e.g. Junior, Senior)'
+        maxLength: 30
+      personType:
+        $ref: 'PersonType'
+        description: 'Indicates if the person is a company or person'
+      organizationName:
+        type: string
+        description: 'Name of an organization (AMPplus: Name der Firma)'
+        maxLength: 200
+      organizationNameAddOn1:
+        type: string
+        description: 'Addon of an organization name'
+        maxLength: 35
+      organizationNameAddOn2:
+        type: string
+        description: 'Addon2 of an organization name'
+        maxLength: 35
+      legalForm:
+        $ref: 'LegalForm'
+        description: 'Legal form of the company'
+      state:
+        $ref: 'PersonState'
+        description: 'Indicates state of a validated person'
+      personAddressKey:
+        $ref: 'KeyWithConfidence'
+        description: 'Identifies a person at a domiclie address (AMP-Key)'
+    required:
+      - personType
+      - state
+      - personAddressKey
+    additionalProperties: false
+    description: 'Information related to the person of an address'
+  PersonalizedAddressState:
+    type: string
+    enum:
+      - PLANNED
+      - ACTIVE
+      - HISTORIC_ACTIVE
+      - NIXIE
+    description: "PLANNED  Planned but not yet deliverable\r\nACTIVE   Active and deliverable\r\nHISTORIC_ACTIVE  historic but active and deliverable\r\nNIXIE    different reasons (e.g. person or company doesen't exist anymore) - not deliverable"
+  ProcessingStateType:
+    type: string
+    enum:
+      - APPLIED
+      - CANCELLED
+    description: "APPLIED                  = Requested service has been applied.\r\nCANCELLED                = Requested service has been cancelled."
+  ProductOrigin:
+    type: string
+    enum:
+      - PREANNOUNCEMENT
+      - READ
+      - MANUALLY_APPLIED
+      - AUTOMATIC
+    description: "Specifies where this product code was read from.\n\nPREANNOUNCEMENT: The product is preannounced\nREAD: The product is read based on an image or text input\nMANUALLY_APPLIED: The product was added manually by a coder\nAUTOMATIC: The product was geneated during the sorting process"
+  ProductProducer:
+    type: string
+    enum:
+      - PREANNOUNCEMENT
+      - DIMENSIONING_WEIGHTING_SCANNING
+      - RECOGNITION_BARCODE
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_SCANNING
+      - SORTING
+    description: "PREANNOUNCEMENT  Component which validates and publishes preannouncement data\nRECOGNITION_BARCODE  Component which reads / captures barcodes on an image\nDIMENSIONING_WEIGHTING_SCANNING Component which reads barcodes, captures dimensions and weights the parcel\nMANUAL_CODING_REJECT Component where barcodes, weight, dimensions and address information are captured or entered (manually)\nMANUAL_CODING_BULK   Component where barcodes, weight, dimensions and address information for bulky goods are captured or entered (manually or partially automated)\nMANUAL_CODING_BULK_SCANNING Component where a coder manually captures barcodes and other specific information for bulky goods\nSORTING Sorting component which delivered a product"
+  ProductSource:
+    type: object
+    properties:
+      producer:
+        $ref: 'ProductProducer'
+        description: 'Component which provided the information'
+      origin:
+        $ref: 'ProductOrigin'
+        description: "Describes where the product information came from. Beware that the value of this\nfield can change with each coding for the same mailpiece.\nEg.: READ -> MANUALLY_APPLIED -> READ"
+      instance:
+        type: string
+        description: 'Instance of the device'
+      sortingUnit:
+        $ref: 'SortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed'
+    required:
+      - producer
+      - origin
+      - instance
+      - sortingUnit
+    additionalProperties: false
+    description: "Describes which system provided the information. This is meant to be used for diagnositcs\nand should not be used to infer any business cases."
+  Product:
+    type: object
+    properties:
+      code:
+        type: string
+        description: 'Validated product code (e.g. 509)'
+      shortName:
+        type: string
+        description: 'Shortname of validated product (e.g. PRI)'
+      source:
+        type: array
+        items:
+          $ref: 'ProductSource'
+        description: 'Source of a product. A product can be captured by multiple devices during an enrichment worfklow'
+    required:
+      - code
+      - source
+    additionalProperties: false
+    description: 'Identified and validated product (old PRZL, "Zusatzleistung")'
+  RecognitionRejectReason:
+    type: string
+    enum:
+      - NO_IMAGE
+      - POOR_IMAGE
+    description: "NO_IMAGE = Technical problem: e.g. images are black, too dark / white or no information is visible. The image quality does not allow reading of the address.\nPOOR_IMAGE = Insufficient image quality or poor contrast. The image quality does not allow reading of the address."
+  RecognitionStep:
+    type: string
+    enum:
+      - BARCODE
+      - INFORMATION_CARRIER
+      - ADDRESS
+      - ADDRESS_RETRY
+    description: "INFORMATION_CARRIER Component which reads information carriers other than barcodes\nBARCODE  Component which reads / captures barcodes on an image\nADDRESS  Component which reads address elements on an image\nADDRESS_RETRY  Component which reads address elements on an image after providing information from other enrichment step (e.g. VCS ROI)"
+  RejectReason:
+    type: object
+    properties:
+      recognition:
+        $ref: 'RecognitionRejectReason'
+        description: 'Cases that may occur in OCR.'
+      video:
+        $ref: 'VideoRejectReason'
+        description: 'Cases that may occur in VCS'
+      manual:
+        $ref: 'ManualRejectReason'
+        description: 'Cases that may occur in MCS.'
+    additionalProperties: false
+  ReturnReasonType:
+    type: string
+    enum:
+      - UNCLAIMED
+      - RELOCATED
+      - REFUSED
+      - RECIPIENT_UNKNOWN
+      - DECEASED
+      - COMPANY_DELETED
+      - RECIPIENT_RETURNED
+      - DAMAGE
+      - POST_RESTANTE
+      - MILITARY
+      - OVERSEA
+      - OUTSIDE_CIRCLE
+      - BOX_NO_LONGER_EMPTIED
+      - RETURN_BY_RECEIVER
+      - RETAIN
+      - DEBT_COLLECTION
+      - REMARK
+      - INVALID_IDENTITY
+      - MISSING_NAME_LABEL
+      - CUSTOMS_CLEARANCE
+      - GENERAL_CARGO_ILLEGAL_ADDRESS
+      - OVERSEA_MISSING_DOCUMENTS
+    description: "Reason why parcel is returned\r\nUNCLAIMED = 0 = Nicht abgeholt (/)\r\nRELOCATED = 1 = Weggezogen, Nachsendefrist abgelaufen (/)\r\nREFUSED = 2 = Annahme verweigert (/)\r\nRECIPIENT_UNKNOWN = 3 = Unbekannt (Empfänger nicht ermittelbar) (/)\r\nDECEASED = 4 = Gestorben (/)\r\nCOMPANY_DELETED = 5 = Firma erloschen (/)\r\nRECIPIENT_RETURNED = 6 = Retour gem. Anweisung Absender/Empf. (/)\r\nDAMAGE = 7 = Beschädigung\r\nPOST_RESTANTE = 8 = Postlagernd\r\nMILITARY = 9 = im Militär\r\nOVERSEA = 10 = im Ausland\r\nOUTSIDE_CIRCLE = 11 = ausserhalb Betreibungskreis\r\nBOX_NO_LONGER_EMPTIED = 12 = HBK/PF wird nicht mehr geleert\r\nRETURN_BY_RECEIVER = 13 = Rücksendung durch Empfänger\r\nRETAIN = 14 = Auftrag Post zurückbehalten\r\nDEBT_COLLECTION = 15 = Vorladung Betreibungurkunde (BU)\r\nREMARK = 16 = Vermerk auf Sendung beachten\r\nINVALID_IDENTITY = 17 = Ungültiges/falsches Ausweisdokument\r\nMISSING_NAME_LABEL = 18 = Briefkasten oder Klingel nicht angeschrieben\r\nCUSTOMS_CLEARANCE = 19 = Neu- oder Korrekturverzollung (/)\r\nGENERAL_CARGO_ILLEGAL_ADDRESS //General cargo (Stückgut) cannot be delivered to the designated address (i.e. a PO box)\r\nOVERSEA_MISSING_DOCUMENTS = 21 = Exportpaket ohne gültige Frachtpapiere"
+  ServiceApplication:
+    type: object
+    properties:
+      serviceOrder:
+        $ref: 'ServiceOrderCoding'
+        description: 'Service order that has been processed.'
+      processingState:
+        $ref: 'ProcessingStateType'
+        description: 'Indicates if the service order has been applied or not'
+    required:
+      - serviceOrder
+      - processingState
+    additionalProperties: false
+    description: "The service application confirms that a service was applied or was cancelled (relevant for billing).\nIt is not supported to cancel the provided service coding and immediately apply a different service application,\ninstead a new service request has to be triggered."
+  ServiceOrderCoding:
+    type: object
+    properties:
+      orderId:
+        type: string
+        description: 'Id of the service order from the source system'
+      orderType:
+        $ref: 'ServiceOrderType'
+        description: 'Type of the service order. Indicates if it''s an order for a single mailpiece or if it''s an order for an address (personAddressKey)'
+      serviceType:
+        $ref: 'ServiceType'
+        description: 'Type of the service. The type is needed to choose the right address label type.'
+      changeableAddress:
+        type: boolean
+        description: 'Indicates whether the service address can be changed by the coding system. This applies to return addresses only. The information is based on the Frankierlizenz and passed on from there.'
+      chargeable:
+        type: boolean
+        description: 'Indicates if the service is chargeable or not. If it''s chargeable the field taxInformation contains the tax to be printed on the address label.'
+      taxInformation:
+        $ref: 'TaxInformation'
+        description: 'The tax information for the service. If a franking value is available, this information has to be printed on the address label.'
+      deliverySlot:
+        $ref: 'DeliverySlot'
+        description: 'Detailed information about the service type DELIVERY_SLOT'
+      returnReason:
+        $ref: 'ReturnReasonType'
+        description: 'Indicates the reason of a returned mailpiece'
+      actionDate:
+        $ref: 'DateTime'
+        description: 'Date that needs to be printed on the label in the retain case'
+      deliveryLanguage:
+        $ref: 'Language'
+        description: 'Language of the distribution office that delivers the mailpiece to the service address. Used to print the address in the correct language.'
+    required:
+      - orderId
+      - orderType
+    additionalProperties: false
+    description: "Service data which was applied during the manual coding process.\nIncludes service data delivered by a sorting system.\nApplied products and addresses can be found directly in the context of Address and Products."
+  ServiceOrderType:
+    type: string
+    enum:
+      - SINGLE_ORDER
+      - PERMANENT_ORDER
+      - TRANSFER_LABEL
+      - MILITARY
+      - MANUAL_ORDER
+      - SENDER_SINGLE_ORDER
+    description: "SINGLE_ORDER = order for a specific mailpiece (Empfänger-Einzelauftrag)\r\nPERMANENT_ORDER = order for personAddressKey (Empfänger-Dauerauftrag)\r\nTRANSFER_LABEL = order for a transfer label case\r\nMILITARY = order for a military address\r\nMANUAL_ORDER = order created at a manual coding station\r\nSENDER_SINGLE_ORDER = order for a specific mailpiece created by the sender"
+  ServiceRequestType:
+    type: string
+    enum:
+      - FORWARD
+      - RETURN
+      - FURTHER_PROCESSING
+    description: "FORWARD: mailpiece should be forwarded to a different address\r\nRETURN: mailpiece should be returned to the initial sender\r\nFURTHER_PROCESSING: transfer label inconclusive. Mailpiece should be sent to the last delivery office"
+  ServiceRequest:
+    type: object
+    properties:
+      serviceOrderId:
+        type: string
+        description: 'Id of the service order.'
+      serviceType:
+        $ref: 'ServiceRequestType'
+        description: 'Type of the service request.'
+      returnReason:
+        $ref: 'ReturnReasonType'
+        description: 'Reason for return (only if serviceType = RETURN).'
+    required:
+      - serviceOrderId
+      - serviceType
+    additionalProperties: false
+    description: "Request from the Coding system to the sorting system to add additional services to the mailpiece.\r\nAn additional coding request can be expected after the service request property has been filled."
+  ServiceType:
+    type: string
+    enum:
+      - FORWARD
+      - FORWARD_POBOX
+      - DELIVERY_SLOT
+      - RETURN
+      - DELAYED_PICKUP
+      - DELAYED_DELIVERY
+      - INTERNATIONAL
+      - MILITARY
+      - INSPECTION
+    description: "FORWARD = forward mailpiece to another address\r\nFORWARD_POBOX = forward mailpiece from a postbox to a domicile address\r\nDELIVERY_SLOT = deliver mailpiece on a specific weekday / at a specific time window\r\nRETURN = the mailpiece has to returned to the sender\r\nDELAYED_PICKUP = the mailpiece has to retained at the postoffice for a specific time. After this time it must be picked up by the receiver.\r\nDELAYED_DELIVERY = the mailpiece has to retained at the postoffice for a specific time. After this time it must be delivered to the receiver.\r\nINTERNATIONAL = the mailpiece must be directed an export office\r\nMILITARY = Military address\r\nINSPECTION = inspect mailpiece via customs officer or sorting specialist"
+  SortingUnit:
+    type: object
+    properties:
+      sortingUnitKey:
+        type: string
+        description: 'Unique identifier of the sorting unit at a specific location.'
+      locationKey:
+        type: string
+        description: 'Unique key identifying the location.'
+    required:
+      - sortingUnitKey
+      - locationKey
+    additionalProperties: false
+    description: 'Sorting unit at a location performing the sorting process step.'
+  Symbology:
+    type: string
+    enum:
+      - NOT_RECOGNIZED
+      - ADDON
+      - CODABAR
+      - CODE_39
+      - CODE_93
+      - CODE_128
+      - DATA_MATRIX
+      - EAN_8
+      - EAN_13
+      - EAN_128
+      - I2OF5
+      - MAXI_CODE
+      - PDF_417
+      - QR
+      - UPC_A
+      - UPC_E
+    description: "NOT_RECOGNIZED The symbology is not recognized\nADDON Barcode Zusatz zu EAN und UPC\nCODABAR Barcode Codabar\nCODE_39 Barcode 39\nCODE_93 Barcode 93\nCODE_128 Barcode 128\nDATA_MATRIX Data Matrix Code\nEAN_8 International Article Number\nEAN_13 International Article Number\nEAN_128 International Article Number\nI2OF5 Interleved 2 of 5 Code\nMAXI_CODE Barcode Maxicode\nPDF_417 Barcode PDF417\nQR QR Barcode\nUPC_A Barcode Universal Product Codes (Normalversion)\nUPC_E Barcode Universal Product Codes (Kurzvariante)"
+  TaxInformation:
+    type: object
+    properties:
+      frankingValue:
+        type: number
+        description: 'The Tax of this service in CHF. This Value is printed on the address label.'
+      paymentMethod:
+        $ref: 'PaymentMethod'
+        description: 'Payment method of the service order. The remark on the address label depends on this value'
+    additionalProperties: false
+    description: 'Tax information for a service'
+  TimeWindow:
+    type: string
+    enum:
+      - REGULAR
+      - EARLY
+      - EVENING
+  ValidationStep:
+    type: string
+    enum:
+      - AUTOMATIC
+      - HUMAN_SUPPORT
+    description: "AUTOMATIC Component which validates an address in an automated enrichment workflow step (e.g. ocr address)\nHUMAN_SUPPORT Component which validates an address in an enrichment workflow where a human is involved - as a support of the coder (e.g. MCS or VCS)"
+  VideoCodingStep:
+    type: string
+    enum:
+      - INTERNAL_REGION
+      - INTERNAL_POSTCODE
+      - INTERNAL_ADDRESS
+      - EXTERNAL_REGION
+      - EXTERNAL_POSTCODE
+      - EXTERNAL_ADDRESS
+    description: "INTERNAL_REGION Component VCS CH: Task in the video coding system where the coder detects address region of interest (ROI) elements on an image\nINTERNAL_POSTCODE Component VCS CH: Task in the video coding system where the coder enters the postcode based on an address region of interest (ROI) image\nINTERNAL_ADDRESS Component VCS CH: Task in the video coding system where the coder enters the recipient address based on an address region of interest (ROI) image\nEXTERNAL_REGION Component VCS Offshore: Task in the video coding system where the coder detects address region of interest (ROI) elements on an image\nEXTERNAL_POSTCODE Component VCS Offshore: Task in the video coding system where the coder enters the postcode based on an address region of interest (ROI) image\nEXTERNAL_ADDRESS Component VCS Offshore: Task in the video coding system where the coder enters the recipient address based on an address region of interest (ROI) image"
+  VideoRejectReason:
+    type: string
+    enum:
+      - REJECTED_TIMEOUT
+      - REJECTED_TECHNICAL
+      - REJECTED_UNRESOLVABLE
+    description: "REJECTED_TIMEOUT = Reject due to a timeout. In this case the solution doesn't deliver a result within a specific time.\nREJECTED_TECHNICAL = Reject due to technical problems (e.g. black images, poor resolution, blurred images, only partial image build up ).\nREJECTED_UNRESOLVABLE = Reject due to unresolved mailpiece (e.g. no address visible on the image, only a part of the sender visible, recipient coding cannot be done)."
+  Workflow:
+    type: object
+    properties:
+      enrichmentSteps:
+        type: array
+        items:
+          $ref: 'EnrichmentStep'
+        description: 'The enrichment steps which occured during a coding workflow. Only one step per array object can be set.'
+      maxImageBasedCodingReached:
+        type: boolean
+        description: 'Indicates if more image based coding is possible.'
+      rejectReason:
+        $ref: 'RejectReason'
+        description: 'Reject that may happen during coding process. They can be discharged as special sorts by the sorting system.'
+    required:
+      - enrichmentSteps
+      - maxImageBasedCodingReached
+    additionalProperties: false
+  DischargeIdentifierTags:
+    type: object
+    properties:
+      nationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
+      internationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
+      customsNumbers:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
+      boxIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
+    additionalProperties: false
+    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
+  DischargeMailpieceEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Globally Unique identifier for this mailpiece event.'
+      mailpieceGlobalKey:
+        type: string
+        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+        maxLength: 200
+      discharged:
+        $ref: 'Discharged'
+        description: 'Mailpiece has been discharged to an outlet on an automatic sorter.'
+    required:
+      - eventId
+      - mailpieceGlobalKey
+    additionalProperties: false
+  DischargeReason:
+    type: string
+    enum:
+      - SORTED
+      - FALLBACK_OUTLET
+      - ITEM_DISAPPEARED
+      - DIMENSION_ERROR
+      - WEIGHT_ERROR
+      - DIRECT_SORTING_MODE
+    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode."
+  DischargeSortingUnit:
+    type: object
+    properties:
+      sortingUnitKey:
+        type: string
+        description: 'Unique key identifying the sorting unit.'
+        maxLength: 200
+      locationKey:
+        type: string
+        description: 'Unique key identifying the location.'
+        maxLength: 200
+    required:
+      - sortingUnitKey
+      - locationKey
+    additionalProperties: false
+    description: 'Sorting unit at a location performing the sorting process step.'
+  Discharged:
+    type: object
+    properties:
+      sortingTime:
+        $ref: 'DateTime'
+        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
+      processingItemId:
+        type: string
+        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
+        maxLength: 32
+      sortingCycleId:
+        type: string
+        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
+        maxLength: 200
+      timestamp:
+        $ref: 'DateTime'
+        description: 'Date & time of the event occurance. This is the time when message was received from the sorting unit.'
+      idTags:
+        $ref: 'DischargeIdentifierTags'
+        description: 'Barcodes and other tags identifying the mailpiece.'
+      sortingUnit:
+        $ref: 'DischargeSortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
+      outlet:
+        type: string
+        description: "Name of the outlet where the mailpiece has been discharged to.\r\nThe outlet is not available if the mailpiece has not been sorted on a automatic sorter (eg. manual bulk sorting)"
+        maxLength: 200
+      dischargeReason:
+        $ref: 'DischargeReason'
+        description: "Specifies why the mailpiece has been discharged. Normally this should be SORTED to indicate\r\nthat the sorting unit did what the Sorting Control System requested."
+    required:
+      - sortingTime
+      - processingItemId
+      - sortingCycleId
+      - timestamp
+      - sortingUnit
+      - dischargeReason
+    additionalProperties: false
+  SubmittedIdentifierTags:
+    type: object
+    properties:
+      nationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
+      internationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
+      customsNumbers:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
+      boxIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
+    additionalProperties: false
+    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
+  SubmittedInformationCarrier:
+    type: object
+    properties:
+      symbology:
+        $ref: 'SubmittedSymbology'
+        description: 'Symbology of an information carrier'
+      value:
+        type: string
+        description: 'Value of an information carrier'
+    required:
+      - symbology
+      - value
+    additionalProperties: false
+    description: 'Identified and captured information carrier (e.g. barcodes, logos).'
+  SubmittedLegalForTrade:
+    type: object
+    properties:
+      weight:
+        type: boolean
+        description: 'Specifies if the measured weight is legal for trade.'
+      dimension:
+        type: boolean
+        description: 'Specifies if the measured dimension is legal for trade.'
+    required:
+      - weight
+      - dimension
+    additionalProperties: false
+  SubmittedMailpieceEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Globally Unique identifier for this mailpiece event.'
+        maxLength: 200
+      mailpieceGlobalKey:
+        type: string
+        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+        maxLength: 200
+      submitted:
+        $ref: 'Submitted'
+        description: 'Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.'
+    required:
+      - eventId
+      - mailpieceGlobalKey
+    additionalProperties: false
+  SubmittedPhysicalProperties:
+    type: object
+    properties:
+      length:
+        type: number
+        description: 'Length in [mm].'
+      width:
+        type: number
+        description: 'Width in [mm].'
+      height:
+        type: number
+        description: 'Height in [mm].'
+      weight:
+        type: number
+        description: 'Actual weight in [g].'
+      boxVolume:
+        type: number
+        description: 'The volume of the minimal box that encloses the whole mailpiece in dm³.'
+      realVolume:
+        type: number
+        description: 'The actual volume of the mailpiece in dm³.'
+      shape:
+        $ref: 'SubmittedShape'
+        description: 'The shape category of the mailpiece.'
+      legalForTrade:
+        $ref: 'SubmittedLegalForTrade'
+        description: 'Specifies what measurements are legal for trade.'
+      scaleId:
+        type: string
+        description: 'The technical id of the scale that measured the weight.'
+    required:
+      - legalForTrade
+    additionalProperties: false
+    description: 'Physical properties of the submitted mailpiece.'
+  SubmittedShape:
+    type: string
+    enum:
+      - BOX
+      - IRREGULAR
+    description: "BOX The mailpiece is mostly shaped like a box.\r\nIRREGULAR The shape of the mailpiece is not clearly defined (eg. bags)"
+  SubmittedSortingProcess:
+    type: string
+    enum:
+      - AUTOMATIC
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_LIGHT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_AUTOMATIC
+    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods"
+  SubmittedSortingUnit:
+    type: object
+    properties:
+      sortingUnitKey:
+        type: string
+        description: 'Unique key identifying the sorting unit.'
+        maxLength: 200
+      locationKey:
+        type: string
+        description: 'Unique key identifying the location.'
+        maxLength: 200
+    required:
+      - sortingUnitKey
+      - locationKey
+    additionalProperties: false
+    description: 'Sorting unit at a location performing the sorting process step.'
+  SubmittedSymbology:
+    type: string
+    enum:
+      - NOT_RECOGNIZED
+      - ADDON
+      - CODABAR
+      - CODE_39
+      - CODE_93
+      - CODE_128
+      - DATA_MATRIX
+      - EAN_8
+      - EAN_13
+      - EAN_128
+      - I2OF5
+      - MAXI_CODE
+      - PDF_417
+      - QR
+      - UPC_A
+      - UPC_E
+    description: "NOT_RECOGNIZED The symbology is not recognized\r\nADDON Barcode Zusatz zu EAN und UPC\r\nCODABAR Barcode Codabar\r\nCODE_39 Barcode 39\r\nCODE_93 Barcode 93\r\nCODE_128 Barcode 128\r\nDATA_MATRIX Data Matrix Code\r\nEAN_8 International Article Number\r\nEAN_13 International Article Number\r\nEAN_128 International Article Number\r\nI2OF5 Interleved 2 of 5 Code\r\nMAXI_CODE Barcode Maxicode\r\nPDF_417 Barcode PDF417\r\nQR QR Barcode\r\nUPC_A Barcode Universal Product Codes (Normalversion)\r\nUPC_E Barcode Universal Product Codes (Kurzvariante)"
+  Submitted:
+    type: object
+    properties:
+      sortingTime:
+        $ref: 'DateTime'
+        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
+      processingItemId:
+        type: string
+        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
+        maxLength: 32
+      sortingCycleId:
+        type: string
+        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
+        maxLength: 200
+      timestamp:
+        $ref: 'DateTime'
+        description: 'Date & time of the event occurance. This is very close to the time when the corresponding message was received from the sorting unit.'
+      idTags:
+        $ref: 'SubmittedIdentifierTags'
+        description: 'Barcodes and other tags identifying the mailpiece.'
+      sortingUnit:
+        $ref: 'SubmittedSortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
+      informationCarriers:
+        type: array
+        items:
+          $ref: 'SubmittedInformationCarrier'
+        description: 'Identified and captured information carrier (e.g. barcodes, logos)'
+      sortingProcess:
+        $ref: 'SubmittedSortingProcess'
+        description: 'Defines the sorting process.'
+      physicalProperties:
+        $ref: 'SubmittedPhysicalProperties'
+        description: "Physical properties of the submitted mailpiece\r\nHINT: always not null, but the values might be null inside."
+      sourceId:
+        type: string
+        description: "The technical id of the device that orinally produced this event.\r\nThis value MUST NOT be used to infer information about the sorting process and may only be used for\r\ndignostics and analysis of the performance of the specific device."
+    required:
+      - sortingTime
+      - processingItemId
+      - sortingCycleId
+      - timestamp
+      - sortingUnit
+      - sortingProcess
+      - physicalProperties
+      - sourceId
+    additionalProperties: false
+    description: 'Event produced when an mailpiece is submitted to a sorting unit.'

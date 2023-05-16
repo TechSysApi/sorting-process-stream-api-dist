@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.13.0
+  version: 0.14.0-feature-updateCodingApi.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -1436,7 +1436,8 @@ definitions:
       - DELAYED_DELIVERY
       - INTERNATIONAL
       - MILITARY
-    description: "FORWARD = forward mailpiece to another address\r\nFORWARD_POBOX = forward mailpiece from a postbox to a domicile address\r\nDELIVERY_SLOT = deliver mailpiece on a specific weekday / at a specific time window\r\nRETURN = the mailpiece has to returned to the sender\r\nDELAYED_PICKUP = the mailpiece has to retained at the postoffice for a specific time. After this time it must be picked up by the receiver.\r\nDELAYED_DELIVERY = the mailpiece has to retained at the postoffice for a specific time. After this time it must be delivered to the receiver.\r\nINTERNATIONAL = the mailpiece must be directed an export office\r\nMILITARY = Military address"
+      - INSPECTION
+    description: "FORWARD = forward mailpiece to another address\r\nFORWARD_POBOX = forward mailpiece from a postbox to a domicile address\r\nDELIVERY_SLOT = deliver mailpiece on a specific weekday / at a specific time window\r\nRETURN = the mailpiece has to returned to the sender\r\nDELAYED_PICKUP = the mailpiece has to retained at the postoffice for a specific time. After this time it must be picked up by the receiver.\r\nDELAYED_DELIVERY = the mailpiece has to retained at the postoffice for a specific time. After this time it must be delivered to the receiver.\r\nINTERNATIONAL = the mailpiece must be directed an export office\r\nMILITARY = Military address\r\nINSPECTION = inspect mailpiece via customs officer or sorting specialist"
   SortingUnit:
     type: object
     properties:
