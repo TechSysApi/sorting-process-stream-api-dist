@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.14.0
+  version: 0.15.0-feature-dependency-update.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -1018,6 +1018,9 @@ definitions:
       value:
         type: string
         description: 'Value of an information carrier'
+      marker:
+        $ref: 'Marker'
+        description: 'Marker of an information carrier'
       source:
         type: array
         items:
@@ -1028,11 +1031,9 @@ definitions:
         description: 'Identification of the coder which scanned or typed the information carrier'
         maxLength: 50
     required:
-      - symbology
-      - value
       - source
     additionalProperties: false
-    description: 'Identified and captured information carrier (e.g. barcodes, logos)'
+    description: "Identified and captured information carrier (e.g. barcodes, logos)\n\nEither symbology and value OR marker has to be filled"
   KeyWithConfidence:
     type: object
     properties:
@@ -1109,6 +1110,10 @@ definitions:
         type: string
         description: "Additional information related to a city\nmultiple purposes, see examples:\n56, 57 = Zoll, Import/Export\n60 = Briefzustellung\n61 = Postfach\n70 = Paketzustellung\n72 = Expresszustellung\n74 = Postautodienst\n75 = Kaserne"
         maxLength: 2
+      addressPostcode6:
+        type: string
+        description: "6 digit postcode\n(AMPplus: Postleitzahl)"
+        maxLength: 6
       postCodeKey:
         $ref: 'KeyWithConfidence'
         description: 'Identifies the postcode physically located on the mailpiece (Ordnungsnummer Post (ONRP), Fremdschlüssel zu ASDP)'
@@ -1136,6 +1141,12 @@ definitions:
     enum:
       - NO_ADDRESS_ON_MAILPIECE
     description: 'NO_ADDRESS_ON_MAILPIECE = Reject because mailpiece either has no visible address, is damaged or in case it is not a Kleinware doesn''t contain a barcode.'
+  Marker:
+    type: string
+    enum:
+      - BUSINESS_REPLY
+      - INTERNATIONAL_BUSINESS_REPLY
+    description: "BUSINESS_REPLY Geschäftsantwortsendung (CICERO)\nINTERNATIONAL_BUSINESS_REPLY Internationale Geschäftsantwortsendung (CCRI & IBRS)"
   PaymentMethod:
     type: string
     enum:
@@ -1670,11 +1681,11 @@ definitions:
       value:
         type: string
         description: 'Value of an information carrier'
-    required:
-      - symbology
-      - value
+      marker:
+        $ref: 'SubmittedMarker'
+        description: 'The information carrier represents the given marker.'
     additionalProperties: false
-    description: 'Identified and captured information carrier (e.g. barcodes, logos).'
+    description: "Identified and captured information carrier (e.g. barcodes, logos).\n\nEither (symbology AND value) OR marker has to be set."
   SubmittedLegalForTrade:
     type: object
     properties:
@@ -1706,6 +1717,12 @@ definitions:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
+  SubmittedMarker:
+    type: string
+    enum:
+      - BUSINESS_REPLY
+      - INTERNATIONAL_BUSINESS_REPLY
+    description: "BUSINESS_REPLY: the mailpiece is marked as a business reply\nINTERNATIONAL_BUSINESS_REPLY: the mailpiece is marked as an international business reply"
   SubmittedPhysicalProperties:
     type: object
     properties:
