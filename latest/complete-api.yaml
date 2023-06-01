@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.15.0
+  version: 0.16.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -1681,11 +1681,11 @@ definitions:
       value:
         type: string
         description: 'Value of an information carrier'
-    required:
-      - symbology
-      - value
+      marker:
+        $ref: 'SubmittedMarker'
+        description: 'The information carrier represents the given marker.'
     additionalProperties: false
-    description: 'Identified and captured information carrier (e.g. barcodes, logos).'
+    description: "Identified and captured information carrier (e.g. barcodes, logos).\n\nEither (symbology AND value) OR marker has to be set."
   SubmittedLegalForTrade:
     type: object
     properties:
@@ -1717,6 +1717,12 @@ definitions:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
+  SubmittedMarker:
+    type: string
+    enum:
+      - BUSINESS_REPLY
+      - INTERNATIONAL_BUSINESS_REPLY
+    description: "BUSINESS_REPLY: the mailpiece is marked as a business reply\nINTERNATIONAL_BUSINESS_REPLY: the mailpiece is marked as an international business reply"
   SubmittedPhysicalProperties:
     type: object
     properties:
