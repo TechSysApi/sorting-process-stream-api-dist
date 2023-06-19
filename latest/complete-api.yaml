@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.16.0
+  version: 0.17.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -41,6 +41,25 @@ definitions:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
+  AddressingDestination:
+    type: object
+    properties:
+      districtDestination:
+        $ref: 'DistrictDestination'
+      postcodeDestination:
+        $ref: 'PostcodeDestination'
+      countryDestination:
+        $ref: 'CountryDestination'
+      countryPartnerDestination:
+        $ref: 'CountryPartnerDestination'
+      customerDestination:
+        $ref: 'CustomerDestination'
+      postboxDestination:
+        $ref: 'PostboxDestination'
+      sectorDestination:
+        $ref: 'SectorDestination'
+    additionalProperties: false
+    description: "Contains addressing destination type specific attributes.\nRemarks: Exactly one of the destination attributes is set."
   AssignmentAddressingDestinationResult:
     type: object
     properties:
@@ -48,19 +67,27 @@ definitions:
         type: string
         description: 'Key of the AddressingDestination that was selected for this mailpiece.'
         maxLength: 200
+      addressingDestination:
+        $ref: 'AddressingDestination'
+        description: 'Detailed information to the addressing destination referenced by the addressingDestinationKey.'
       deliveryOfficePostcodeKey:
         type: string
         description: 'The postcode key of the delivery office that handles this addressing destination.'
         maxLength: 200
+      deliveryOfficeType:
+        $ref: 'DeliveryOfficeType'
+        description: 'The type of the delivery office.'
       propertyGroupKey:
         type: string
         description: 'The property group that was used to select this AddressingDestination.'
         maxLength: 200
     required:
       - addressingDestinationKey
+      - addressingDestination
       - deliveryOfficePostcodeKey
+      - deliveryOfficeType
     additionalProperties: false
-    description: 'Resolved addressing destination from delivery plan.'
+    description: "Resolved addressing destination from delivery plan.\nThe addressing destination is the target of a mailpiece in the context of sorting. This is not necessarly the customer\nthat will receive ther mailpiece but usually the last stop within swiss post before the mailpiece is handed over to someone else."
   AssignmentCodingReason:
     type: string
     enum:
@@ -537,6 +564,60 @@ definitions:
       - specialSortName
     additionalProperties: false
     description: 'Special sort result evaluated for the mailpiece'
+  CountryDestination:
+    type: object
+    properties:
+      countryKey:
+        type: string
+        description: 'Unique identifier for the country.'
+        maxLength: 200
+      countryCode:
+        type: string
+        description: "The code of the country (ISO 3166-1 alpha-2 https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).\ne.g. CH"
+        maxLength: 2
+    required:
+      - countryKey
+      - countryCode
+    additionalProperties: false
+    description: 'Adressing Destination for a Country (used for export)'
+  CountryPartnerDestination:
+    type: object
+    properties:
+      countryPartnerKey:
+        type: string
+        description: 'Unique identifier for the country partner.'
+        maxLength: 200
+      countryCode:
+        type: string
+        description: "The code of the country where this partner resides (ISO 3166-1 alpha-2 https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).\ni.e. CH"
+        maxLength: 2
+    required:
+      - countryPartnerKey
+      - countryCode
+    additionalProperties: false
+    description: 'Country Partner'
+  CustomerDestination:
+    type: object
+    properties:
+      customerDestinationKey:
+        type: string
+        description: "Unique key of the customer destination.\nPrimary key 🔑"
+        maxLength: 200
+      customerDestinationName:
+        type: string
+        description: 'Name of the customer destination.'
+        maxLength: 200
+    required:
+      - customerDestinationKey
+      - customerDestinationName
+    additionalProperties: false
+    description: 'Customer Destination (Kundenausscheidung)'
+  DeliveryOfficeType:
+    type: string
+    enum:
+      - POBOX
+      - DOMICILE
+    description: 'Type of the delivery office'
   DestinationAssigned:
     type: object
     properties:
@@ -580,6 +661,70 @@ definitions:
       - sortingResult
     additionalProperties: false
     description: 'Evaluated destination assignment result.'
+  DistrictDestination:
+    type: object
+    properties:
+      logicalKey:
+        type: string
+        description: 'Logical key for this district (BEZ_LOG_KEY).'
+        maxLength: 200
+      areaNumber:
+        type: string
+        description: "The number identifies the delivery area (German: Bezirk) within the delivery office.\nFor example \"212\""
+        maxLength: 200
+    required:
+      - logicalKey
+      - areaNumber
+    additionalProperties: false
+    description: 'An area assigned to a delivery clerk '
+  PostboxDestination:
+    type: object
+    properties:
+      postcodeKey:
+        type: string
+        description: "Unique identifier of the postcode (Ordnungsnummer Postleitzahl (ONRP))\nthat this postbox belongs to.\ne.g. 1886"
+        maxLength: 200
+      postcode6:
+        type: string
+        description: "Postcode6 of the postbox destination.\ne.g. 322500"
+        maxLength: 6
+    required:
+      - postcodeKey
+      - postcode6
+    additionalProperties: false
+    description: Postbox
+  PostcodeDestination:
+    type: object
+    properties:
+      postcodeKey:
+        type: string
+        description: "Unique identifier of the postcode (Ordnungsnummer Postleitzahl (ONRP)).\nThis is the logical key of a postcode.\ne.g. 1886"
+        maxLength: 200
+      postcode6:
+        type: string
+        description: "Postcode6 of this adressing destination.\ne.g. 322500"
+        maxLength: 6
+    required:
+      - postcodeKey
+      - postcode6
+    additionalProperties: false
+    description: 'Postcode and their relations to offices.'
+  SectorDestination:
+    type: object
+    properties:
+      poboxSectorKey:
+        type: string
+        description: "Unique key of the postbox sector.\nPrimary key 🔑"
+        maxLength: 200
+      poboxSectorNumber:
+        type: string
+        description: 'Number to identify the postbox sector within the mailbox system.'
+        maxLength: 200
+    required:
+      - poboxSectorKey
+      - poboxSectorNumber
+    additionalProperties: false
+    description: Sector
   AddressProducer:
     type: string
     enum:
@@ -1639,6 +1784,10 @@ definitions:
       dischargeReason:
         $ref: 'DischargeReason'
         description: "Specifies why the mailpiece has been discharged. Normally this should be SORTED to indicate\r\nthat the sorting unit did what the Sorting Control System requested."
+      sourceId:
+        type: string
+        description: "The id of the device that sent the message to confirm the discharge.\r\nThis MUST NOT be used to build business logic and can change at any time. It SHOULD\r\nonly be used for diagnostics or statistical purposes."
+        maxLength: 200
     required:
       - sortingTime
       - processingItemId
@@ -1646,6 +1795,7 @@ definitions:
       - timestamp
       - sortingUnit
       - dischargeReason
+      - sourceId
     additionalProperties: false
   SubmittedIdentifierTags:
     type: object
