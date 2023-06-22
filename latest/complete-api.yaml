@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.18.0-feature-PZS-8758-services.1
+  version: 0.18.0-feature-PZS-8758-services.3
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -53,25 +53,6 @@ definitions:
       - mailpieceGlobalKey
     additionalProperties: false
     description: 'Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).'
-  AddressingDestination:
-    type: object
-    properties:
-      districtDestination:
-        $ref: 'DistrictDestination'
-      postcodeDestination:
-        $ref: 'PostcodeDestination'
-      countryDestination:
-        $ref: 'CountryDestination'
-      countryPartnerDestination:
-        $ref: 'CountryPartnerDestination'
-      customerDestination:
-        $ref: 'CustomerDestination'
-      postboxDestination:
-        $ref: 'PostboxDestination'
-      sectorDestination:
-        $ref: 'SectorDestination'
-    additionalProperties: false
-    description: "Contains addressing destination type specific attributes.\nRemarks: Exactly one of the destination attributes is set."
   AssignmentAddressingDestinationResult:
     type: object
     properties:
@@ -80,14 +61,14 @@ definitions:
         description: 'Key of the AddressingDestination that was selected for this mailpiece.'
         maxLength: 200
       addressingDestination:
-        $ref: 'AddressingDestination'
+        $ref: 'AssignmentAddressingDestination'
         description: 'Detailed information to the addressing destination referenced by the addressingDestinationKey.'
       deliveryOfficePostcodeKey:
         type: string
         description: 'The postcode key of the delivery office that handles this addressing destination.'
         maxLength: 200
       deliveryOfficeType:
-        $ref: 'DeliveryOfficeType'
+        $ref: 'AssignmentDeliveryOfficeType'
         description: 'The type of the delivery office.'
       propertyGroupKey:
         type: string
@@ -100,6 +81,25 @@ definitions:
       - deliveryOfficeType
     additionalProperties: false
     description: "Resolved addressing destination from delivery plan.\nThe addressing destination is the target of a mailpiece in the context of sorting. This is not necessarly the customer\nthat will receive ther mailpiece but usually the last stop within swiss post before the mailpiece is handed over to someone else."
+  AssignmentAddressingDestination:
+    type: object
+    properties:
+      districtDestination:
+        $ref: 'AssignmentDistrictDestination'
+      postcodeDestination:
+        $ref: 'AssignmentPostcodeDestination'
+      countryDestination:
+        $ref: 'AssignmentCountryDestination'
+      countryPartnerDestination:
+        $ref: 'AssignmentCountryPartnerDestination'
+      customerDestination:
+        $ref: 'AssignmentCustomerDestination'
+      postboxDestination:
+        $ref: 'AssignmentPostboxDestination'
+      sectorDestination:
+        $ref: 'AssignmentSectorDestination'
+    additionalProperties: false
+    description: "Contains addressing destination type specific attributes.\nRemarks: Exactly one of the destination attributes is set."
   AssignmentCodingReason:
     type: string
     enum:
@@ -137,6 +137,60 @@ definitions:
       - outletName
     additionalProperties: false
     description: 'Mail is automatically sorted to containers which can be reached by an outlet. This typically is the situation on a parcel sorting machine.'
+  AssignmentCountryDestination:
+    type: object
+    properties:
+      countryKey:
+        type: string
+        description: 'Unique identifier for the country.'
+        maxLength: 200
+      countryCode:
+        type: string
+        description: "The code of the country (ISO 3166-1 alpha-2 https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).\ne.g. CH"
+        maxLength: 2
+    required:
+      - countryKey
+      - countryCode
+    additionalProperties: false
+    description: 'Adressing Destination for a Country (used for export)'
+  AssignmentCountryPartnerDestination:
+    type: object
+    properties:
+      countryPartnerKey:
+        type: string
+        description: 'Unique identifier for the country partner.'
+        maxLength: 200
+      countryCode:
+        type: string
+        description: "The code of the country where this partner resides (ISO 3166-1 alpha-2 https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).\ni.e. CH"
+        maxLength: 2
+    required:
+      - countryPartnerKey
+      - countryCode
+    additionalProperties: false
+    description: 'Country Partner'
+  AssignmentCustomerDestination:
+    type: object
+    properties:
+      customerDestinationKey:
+        type: string
+        description: "Unique key of the customer destination.\nPrimary key 🔑"
+        maxLength: 200
+      customerDestinationName:
+        type: string
+        description: 'Name of the customer destination.'
+        maxLength: 200
+    required:
+      - customerDestinationKey
+      - customerDestinationName
+    additionalProperties: false
+    description: 'Customer Destination (Kundenausscheidung)'
+  AssignmentDeliveryOfficeType:
+    type: string
+    enum:
+      - POBOX
+      - DOMICILE
+    description: 'Type of the delivery office'
   AssignmentDeliveryPointType:
     type: string
     enum:
@@ -159,6 +213,22 @@ definitions:
       - WATERFALL_AND_ROUND_ROBIN
       - LEAST_COST
     description: "Defines the distribution strategy to use when multiple Outlets are available for a given OutletGroup.\n- ROUND_ROBIN: Use each Outlet one after the other, so that each Outlet receices the same amount of mailpieces.\n- WATERFALL: Use one Outlet until it's full, then use the next one (the order of the Outlets is determined by the priority attribute).\n- WATERFALL_AND_ROUND_ROBIN: The same as WATERFALL but if there are multiple Outlets that have the same priority use ROUNDROBIN between them.\n- LEAST_COST: Use the Outlets that has the least cost associated (eg. is closes or can be accessed the quickest)\n\nNote that not all sorters support every strategy."
+  AssignmentDistrictDestination:
+    type: object
+    properties:
+      logicalKey:
+        type: string
+        description: 'Logical key for this district (BEZ_LOG_KEY).'
+        maxLength: 200
+      areaNumber:
+        type: string
+        description: "The number identifies the delivery area (German: Bezirk) within the delivery office.\nFor example \"212\""
+        maxLength: 200
+    required:
+      - logicalKey
+      - areaNumber
+    additionalProperties: false
+    description: 'An area assigned to a delivery clerk '
   AssignmentIdentifierTags:
     type: object
     properties:
@@ -250,6 +320,38 @@ definitions:
       - outletName
     additionalProperties: false
     description: "Mail is manually or automatically sorted to outlets.\nThis is typically the case for letter sorting processes where letters are first collected in a smaller container."
+  AssignmentPostboxDestination:
+    type: object
+    properties:
+      postcodeKey:
+        type: string
+        description: "Unique identifier of the postcode (Ordnungsnummer Postleitzahl (ONRP))\nthat this postbox belongs to.\ne.g. 1886"
+        maxLength: 200
+      postcode6:
+        type: string
+        description: "Postcode6 of the postbox destination.\ne.g. 322500"
+        maxLength: 6
+    required:
+      - postcodeKey
+      - postcode6
+    additionalProperties: false
+    description: Postbox
+  AssignmentPostcodeDestination:
+    type: object
+    properties:
+      postcodeKey:
+        type: string
+        description: "Unique identifier of the postcode (Ordnungsnummer Postleitzahl (ONRP)).\nThis is the logical key of a postcode.\ne.g. 1886"
+        maxLength: 200
+      postcode6:
+        type: string
+        description: "Postcode6 of this adressing destination.\ne.g. 322500"
+        maxLength: 6
+    required:
+      - postcodeKey
+      - postcode6
+    additionalProperties: false
+    description: 'Postcode and their relations to offices.'
   AssignmentProcessingLocation:
     type: object
     properties:
@@ -401,6 +503,22 @@ definitions:
       - OUTLET_MISSED
       - UNDEFINED_ERROR
     description: "The reason why the machine requests mailpiece attributes.\nList of values:\n- SCANNER_TIMEOUT: Item has reached the max allowed amount of scans and the last attempt was a \"no answer\" from scanner.\n- ITEM_INDUCTION_ERROR: Induction error item detected (occupied twice, wrong tray).\n- ITEM_DISCHARGE_ERROR: Discharge faults.\n- ITEM_ERROR: Item has a Logical error.\n- ITEM_TRACKING_ERROR: item was inducted with tracking fault.\n- ITEM_STRAY: Stray item detected.\n- ITEM_OCCUPIED_TWICE_ERROR: item was inducted on occupied tray.\n- ITEM_NO_OUTLETGROUP: No sorting information / outlet group has been received for this item.\n- ITEM_OUTLETGROUP_REQUIRED: The machine requires an outlet group.\n- OUTLET_NOT_AVAILABLE: No available chute could be found.\n- OUTLET_UNKNOWN: Logical destination not defined.\n- OUTLET_NO_CAPACITY: The destination outlet has no more capacity.\n- OUTLET_MISSED: Sortcode has been updated (push or repetitive requests), physical outlet already passed.\n- UNDEFINED_ERROR: Internal error happened."
+  AssignmentSectorDestination:
+    type: object
+    properties:
+      poboxSectorKey:
+        type: string
+        description: "Unique key of the postbox sector.\nPrimary key 🔑"
+        maxLength: 200
+      poboxSectorNumber:
+        type: string
+        description: 'Number to identify the postbox sector within the mailbox system.'
+        maxLength: 200
+    required:
+      - poboxSectorKey
+      - poboxSectorNumber
+    additionalProperties: false
+    description: Sector
   AssignmentSenderSingleOrderType:
     type: string
     enum:
@@ -719,60 +837,6 @@ definitions:
     required:
       - type
     additionalProperties: false
-  CountryDestination:
-    type: object
-    properties:
-      countryKey:
-        type: string
-        description: 'Unique identifier for the country.'
-        maxLength: 200
-      countryCode:
-        type: string
-        description: "The code of the country (ISO 3166-1 alpha-2 https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).\ne.g. CH"
-        maxLength: 2
-    required:
-      - countryKey
-      - countryCode
-    additionalProperties: false
-    description: 'Adressing Destination for a Country (used for export)'
-  CountryPartnerDestination:
-    type: object
-    properties:
-      countryPartnerKey:
-        type: string
-        description: 'Unique identifier for the country partner.'
-        maxLength: 200
-      countryCode:
-        type: string
-        description: "The code of the country where this partner resides (ISO 3166-1 alpha-2 https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).\ni.e. CH"
-        maxLength: 2
-    required:
-      - countryPartnerKey
-      - countryCode
-    additionalProperties: false
-    description: 'Country Partner'
-  CustomerDestination:
-    type: object
-    properties:
-      customerDestinationKey:
-        type: string
-        description: "Unique key of the customer destination.\nPrimary key 🔑"
-        maxLength: 200
-      customerDestinationName:
-        type: string
-        description: 'Name of the customer destination.'
-        maxLength: 200
-    required:
-      - customerDestinationKey
-      - customerDestinationName
-    additionalProperties: false
-    description: 'Customer Destination (Kundenausscheidung)'
-  DeliveryOfficeType:
-    type: string
-    enum:
-      - POBOX
-      - DOMICILE
-    description: 'Type of the delivery office'
   DestinationAssigned:
     type: object
     properties:
@@ -816,70 +880,6 @@ definitions:
       - sortingResult
     additionalProperties: false
     description: 'Evaluated destination assignment result.'
-  DistrictDestination:
-    type: object
-    properties:
-      logicalKey:
-        type: string
-        description: 'Logical key for this district (BEZ_LOG_KEY).'
-        maxLength: 200
-      areaNumber:
-        type: string
-        description: "The number identifies the delivery area (German: Bezirk) within the delivery office.\nFor example \"212\""
-        maxLength: 200
-    required:
-      - logicalKey
-      - areaNumber
-    additionalProperties: false
-    description: 'An area assigned to a delivery clerk '
-  PostboxDestination:
-    type: object
-    properties:
-      postcodeKey:
-        type: string
-        description: "Unique identifier of the postcode (Ordnungsnummer Postleitzahl (ONRP))\nthat this postbox belongs to.\ne.g. 1886"
-        maxLength: 200
-      postcode6:
-        type: string
-        description: "Postcode6 of the postbox destination.\ne.g. 322500"
-        maxLength: 6
-    required:
-      - postcodeKey
-      - postcode6
-    additionalProperties: false
-    description: Postbox
-  PostcodeDestination:
-    type: object
-    properties:
-      postcodeKey:
-        type: string
-        description: "Unique identifier of the postcode (Ordnungsnummer Postleitzahl (ONRP)).\nThis is the logical key of a postcode.\ne.g. 1886"
-        maxLength: 200
-      postcode6:
-        type: string
-        description: "Postcode6 of this adressing destination.\ne.g. 322500"
-        maxLength: 6
-    required:
-      - postcodeKey
-      - postcode6
-    additionalProperties: false
-    description: 'Postcode and their relations to offices.'
-  SectorDestination:
-    type: object
-    properties:
-      poboxSectorKey:
-        type: string
-        description: "Unique key of the postbox sector.\nPrimary key 🔑"
-        maxLength: 200
-      poboxSectorNumber:
-        type: string
-        description: 'Number to identify the postbox sector within the mailbox system.'
-        maxLength: 200
-    required:
-      - poboxSectorKey
-      - poboxSectorNumber
-    additionalProperties: false
-    description: Sector
   CodedAddressProducer:
     type: string
     enum:
