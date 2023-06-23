@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.18.0-feature-PZS-8758-services.4
+  version: 0.18.0-feature-PZS-8758-services.5
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
