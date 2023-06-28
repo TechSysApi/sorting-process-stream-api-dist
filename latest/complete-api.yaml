@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.17.2
+  version: 0.18.0-feature-updatePkg.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -70,6 +70,9 @@ definitions:
       deliveryOfficeType:
         $ref: 'AssignmentDeliveryOfficeType'
         description: 'The type of the delivery office.'
+      deliveryOffice:
+        $ref: 'AssignmentDeliveryOffice'
+        description: 'The delivery office that handles this addressing destination.'
       propertyGroupKey:
         type: string
         description: 'The property group that was used to select this AddressingDestination.'
@@ -79,6 +82,7 @@ definitions:
       - addressingDestination
       - deliveryOfficePostcodeKey
       - deliveryOfficeType
+      - deliveryOffice
     additionalProperties: false
     description: "Resolved addressing destination from delivery plan.\nThe addressing destination is the target of a mailpiece in the context of sorting. This is not necessarly the customer\nthat will receive ther mailpiece but usually the last stop within swiss post before the mailpiece is handed over to someone else."
   AssignmentAddressingDestination:
@@ -191,6 +195,21 @@ definitions:
       - POBOX
       - DOMICILE
     description: 'Type of the delivery office'
+  AssignmentDeliveryOffice:
+    type: object
+    properties:
+      deliveryOfficePostcodeKey:
+        type: string
+        description: 'The postcode key of the delivery office that handles this addressing destination.'
+        maxLength: 200
+      deliveryOfficeType:
+        $ref: 'AssignmentDeliveryOfficeType'
+        description: 'The type of the delivery office.'
+    required:
+      - deliveryOfficePostcodeKey
+      - deliveryOfficeType
+    additionalProperties: false
+    description: "Identifies a delivery office using the postcode key and the type of the delivery office.\nAs long as there is no key for a delivery office, this must be done in this way."
   AssignmentDeliveryPointType:
     type: string
     enum:
@@ -363,8 +382,11 @@ definitions:
         type: string
         description: 'The postcode key of the delivery office of the delivery office where the mailpiece is processed next.'
         maxLength: 200
+      deliveryOffice:
+        $ref: 'AssignmentDeliveryOffice'
+        description: 'The delivery office where the mailpiece is processed next.'
     additionalProperties: false
-    description: "Identifies the different locations where the Post operates, e.g.: sorting centers, post offices, offices, etc.\nExactly one of the properties must be set."
+    description: "Identifies the different locations where the Post operates, e.g.: sorting centers, post offices, offices, etc.\nEither the sortingLocationKey or the deliveryOffice must be set."
   AssignmentProcessingType:
     type: string
     enum:
@@ -396,6 +418,15 @@ definitions:
       - AUTOMATIC
       - SENDER_ORDER
     description: "Specifies where this product code was read from.\n\nPREANNOUNCEMENT: The product is preannounced\nREAD: The product is read based on an image or text input\nMANUALLY_APPLIED: The product was added manually by a coder\nAUTOMATIC: The product was geneated during the sorting process\nSENDER_ORDER: The prodcut code was added because a sender order requried it"
+  AssignmentProvisioning:
+    type: object
+    properties:
+      internalProvisioning:
+        $ref: 'InternalProvisioning'
+      transportProvisioning:
+        $ref: 'TransportProvisioning'
+    additionalProperties: false
+    description: "Specifies the selected provisioning that was used for this sorting product.\nThere must be either a internal provisioning or a transport provisioning."
   AssignmentRecipientAddressKeys:
     type: object
     properties:
@@ -528,12 +559,11 @@ definitions:
       - DISTRIBUTION_THURSDAY
       - DISTRIBUTION_FRIDAY
       - DISTRIBUTION_SATURDAY
-      - EMPTY_DISPOBOX
       - MULTIPLE_IDENT_CODES
       - MAILPIECE_WITHOUT_IDENT_CODE
       - NOT_IN_DELIVERY_PLAN
       - NO_SPECIAL_SORT_MAPPING
-    description: "Lists the different reasons why sorting to an adressing destination was not possible.\n  - NO_ADDRESSING_DESTINATION_OR_SORT_REASON:  Sorting process could not find an address or a sort reason.\n  - SORTER_DEVICE_ERROR: Error from the sorting device.\n  - TOO_MANY_SORTING_LOOPS: Indicates that the number of sorting pipeline executions has reached its threshold.\n  - RECIPIENT_ORDER: General reason for all recipient order, once the specific recipient orders have been implemented, this can be replaced.\n  - NOT_IN_SORT_PLAN: Indicates that for the given address or special sort, no matching information was found in sortplan.\n  - NO_SORTING_RULE_MATCHED: No sorting rule was execute for a mailpiece.\n  - LOOPING_MAILPIECE: Mailpiece is looping between different centers.\n  - CARGO: Is set if a mailpiece is identified as cargo (too large or heavy to be processed normally).\n  - CUSTOMS_MISSING_DECLARATION: There is no customs information for the current mailpiece.\n  - CUSTOMS_BLOCKED: Mailpiece is blocked from passing customs.\n  - CUSTOMS_INSPECTION: Indicates that a mailpiece needs to be examined by customs authority.\n  - CUSTOMS_EXTERNAL_INSPECTION: Mailpiece will be examined by an external authority, e.g. precious metal.\n  - ZALANDO_RED: Indicates a missing content declaration of a returning mailpiece which will cross customs (e.g. Zalando returns).\n  - RECIPIENT_ORDER_FORWARD_ADDRESSEE: The recipient has indicated that the mailpiece should be forwarded to another addressee.\n  - RECIPIENT_ORDER_FORWARD_LOCATION: The recipient has indicated that the mailpiece should be forwarded to another location (e.g. PoBox).\n  - RECIPIENT_ORDER_DELIVERY_DAY: The recipient has indicated that the mailpiece should be delivered on a specific day.\n  - RECIPIENT_ORDER_FORWARD: General reason to indicate that a mailpiece will be forwarded.\n  - RECIPIENT_ORDER_SECOND_DELIVERY: Indicates that a mailpiece couldn't be delivered successfully and will be delivered again.\n  - RECIPIENT_STANDING_ORDER_FORWARD: Recipient has a standing forward order in place (e.g. when moving to a new location and mail traffic should be forwarded to  the new address).\n  - RECIPIENT_STANDING_ORDER_FORWARD_PO_BOX: Recipient has a standing forward order in place to forward mailpieces to a PoBox.\n  - RECIPIENT_STANDING_ORDER_DELAYED_PICKUP: Mailpiece will be kept back until the customer picks it up.\n  - RECIPIENT_STANDING_ORDER_DELAYED_DELIVERY: Mailpiece will be kept back for x amount of time and then delivered again.\n  - RECIPIENT_STANDING_ORDER_RETURN: Mailpiece will be returned to sender.\n  - RECIPIENT_STANDING_ORDER_DELIVERY_SLOT: Mailpiece will be delivered on a specific delivery slot.\n  - SENDER_ORDER_CHANGE: Indicates a immediate change in the sorting process (e.g. suspicion for fraud -> mailpiece needs to be returned and not delivered).\n  - TRANSFER_FORWARD: A transfer product code was detected indicating a forward address.\n  - TRANSFER_RETURN: A transfer product code was detected indicating that the mailpiece should be returned.\n  - TRANSFER: General reason to indicate a transfer case has been detected but the specific type is unknown.\n  - THERMO_CARE_AMBIENT_FOR_STORAGE: A mailpiece with special temperature related storage requirements. These cannot be sorted for delivery on a friday. Mailpieces with ThermoCare need to be stored over the weekend in storage with the correct temperature.\n  - THERMO_CARE_COLD_FOR_STORAGE: A mailpiece with special temperature related storage requirements. These cannot be sorted for delivery on a friday. Mailpieces with ThermoCare need to be stored over the weekend in storage with the correct temperature.\n  - DISTRIBUTION_MONDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_TUESDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_WEDNESDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_THURSDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_FRIDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_SATURDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - EMPTY_DISPOBOX: Current mailpiece is an empty dispobox, this reason will be used to eject the box at the correct ramp near the collection point.\n  - MULTIPLE_IDENT_CODES: Multiple mailpiece identifications where found on the mailpiece.\n  - MAILPIECE_WITHOUT_IDENT_COD: No identification was found for the mailpiece.\n  - NOT_IN_DELIVERY_PLAN: A lookup in the Delivery Plan has returned no results.\n  - NO_SPECIAL_SORT_MAPPING: No special sort mapping was found for a sort reason."
+    description: "Lists the different reasons why sorting to an adressing destination was not possible.\n  - NO_ADDRESSING_DESTINATION_OR_SORT_REASON:  Sorting process could not find an address or a sort reason.\n  - SORTER_DEVICE_ERROR: Error from the sorting device.\n  - TOO_MANY_SORTING_LOOPS: Indicates that the number of sorting pipeline executions has reached its threshold.\n  - RECIPIENT_ORDER: General reason for all recipient order, once the specific recipient orders have been implemented, this can be replaced.\n  - NOT_IN_SORT_PLAN: Indicates that for the given address or special sort, no matching information was found in sortplan.\n  - NO_SORTING_RULE_MATCHED: No sorting rule was execute for a mailpiece.\n  - LOOPING_MAILPIECE: Mailpiece is looping between different centers.\n  - CARGO: Is set if a mailpiece is identified as cargo (too large or heavy to be processed normally).\n  - CUSTOMS_MISSING_DECLARATION: There is no customs information for the current mailpiece.\n  - CUSTOMS_BLOCKED: Mailpiece is blocked from passing customs.\n  - CUSTOMS_INSPECTION: Indicates that a mailpiece needs to be examined by customs authority.\n  - CUSTOMS_EXTERNAL_INSPECTION: Mailpiece will be examined by an external authority, e.g. precious metal.\n  - ZALANDO_RED: Indicates a missing content declaration of a returning mailpiece which will cross customs (e.g. Zalando returns).\n  - RECIPIENT_ORDER_FORWARD_ADDRESSEE: The recipient has indicated that the mailpiece should be forwarded to another addressee.\n  - RECIPIENT_ORDER_FORWARD_LOCATION: The recipient has indicated that the mailpiece should be forwarded to another location (e.g. PoBox).\n  - RECIPIENT_ORDER_DELIVERY_DAY: The recipient has indicated that the mailpiece should be delivered on a specific day.\n  - RECIPIENT_ORDER_FORWARD: General reason to indicate that a mailpiece will be forwarded.\n  - RECIPIENT_ORDER_SECOND_DELIVERY: Indicates that a mailpiece couldn't be delivered successfully and will be delivered again.\n  - RECIPIENT_STANDING_ORDER_FORWARD: Recipient has a standing forward order in place (e.g. when moving to a new location and mail traffic should be forwarded to  the new address).\n  - RECIPIENT_STANDING_ORDER_FORWARD_PO_BOX: Recipient has a standing forward order in place to forward mailpieces to a PoBox.\n  - RECIPIENT_STANDING_ORDER_DELAYED_PICKUP: Mailpiece will be kept back until the customer picks it up.\n  - RECIPIENT_STANDING_ORDER_DELAYED_DELIVERY: Mailpiece will be kept back for x amount of time and then delivered again.\n  - RECIPIENT_STANDING_ORDER_RETURN: Mailpiece will be returned to sender.\n  - RECIPIENT_STANDING_ORDER_DELIVERY_SLOT: Mailpiece will be delivered on a specific delivery slot.\n  - SENDER_ORDER_CHANGE: Indicates a immediate change in the sorting process (e.g. suspicion for fraud -> mailpiece needs to be returned and not delivered).\n  - TRANSFER_FORWARD: A transfer product code was detected indicating a forward address.\n  - TRANSFER_RETURN: A transfer product code was detected indicating that the mailpiece should be returned.\n  - TRANSFER: General reason to indicate a transfer case has been detected but the specific type is unknown.\n  - THERMO_CARE_AMBIENT_FOR_STORAGE: A mailpiece with special temperature related storage requirements. These cannot be sorted for delivery on a friday. Mailpieces with ThermoCare need to be stored over the weekend in storage with the correct temperature.\n  - THERMO_CARE_COLD_FOR_STORAGE: A mailpiece with special temperature related storage requirements. These cannot be sorted for delivery on a friday. Mailpieces with ThermoCare need to be stored over the weekend in storage with the correct temperature.\n  - DISTRIBUTION_MONDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_TUESDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_WEDNESDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_THURSDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_FRIDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - DISTRIBUTION_SATURDAY: Mailpiece are stored until they can be delivered on the indicated weekday.\n  - MULTIPLE_IDENT_CODES: Multiple mailpiece identifications where found on the mailpiece.\n  - MAILPIECE_WITHOUT_IDENT_COD: No identification was found for the mailpiece.\n  - NOT_IN_DELIVERY_PLAN: A lookup in the Delivery Plan has returned no results.\n  - NO_SPECIAL_SORT_MAPPING: No special sort mapping was found for a sort reason."
   AssignmentSortingEndpointGroup:
     type: object
     properties:
@@ -606,20 +636,25 @@ definitions:
   AssignmentSortingProduct:
     type: object
     properties:
-      sortingProductName:
+      sortingProductId:
         type: string
-        description: 'Sorting product lookup result for either addressingDestinationResult or specialSortResult.'
+        description: 'The id of the selected sorting product from the sort plan.'
+        maxLength: 200
+      name:
+        type: string
+        description: 'The name of the selected sorting product from the sort plan.'
         maxLength: 200
       propertyGroupKey:
         type: string
         description: 'The property group key that was used to resolve this sorting product.'
         maxLength: 200
-      sweepClearanceTime:
-        type: string
-        description: 'The clearance time of the selected sweep from the sorting product.'
-        pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+      provisioning:
+        $ref: 'AssignmentProvisioning'
+        description: 'Specifies the selected provisioning that was used for this sorting product.'
     required:
-      - sortingProductName
+      - sortingProductId
+      - name
+      - provisioning
     additionalProperties: false
     description: 'Applied sorting product from sort plan.'
   AssignmentSortingResult:
@@ -737,6 +772,31 @@ definitions:
       - sortingResult
     additionalProperties: false
     description: 'Evaluated destination assignment result.'
+  InternalProvisioning:
+    type: object
+    properties:
+      clearanceTime:
+        type: string
+        description: "The latest time when containers, e.g. rollboxes are brought to the staging area for loading into the transport.\nIf no clearance time is defined, the sorting product is processed as long as the sort plan is executed.\nNote: The time is NOT relative to the post day.\ne.g. \"06:00\""
+        pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+    additionalProperties: false
+    description: "Internal provisioning is intended for sorting products that do not leave\nthe current location."
+  TransportProvisioning:
+    type: object
+    properties:
+      provisioningScenario:
+        type: string
+        description: "The provisioning scenario that was used for this assignemnt.\nThis scenario defines the provisioning times depending on how the\ntransport is organized."
+        maxLength: 200
+      clearanceTime:
+        type: string
+        description: "The latest time when containers, e.g. rollboxes are brought to the staging area for loading into the transport.\nA clearance time is always defined.\nNote: The time is NOT relative to the post day.\ne.g. \"06:00\""
+        pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+    required:
+      - provisioningScenario
+      - clearanceTime
+    additionalProperties: false
+    description: "Transport provisioning is intended for sorting products that leave the\ncurrent location by transport."
   CodedAddressProducer:
     type: string
     enum:
