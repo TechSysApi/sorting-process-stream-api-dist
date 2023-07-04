@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.20.0-feature-PZS-8758-services.8
+  version: 0.20.0-feature-PZS-8758-services.9
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -865,7 +865,8 @@ definitions:
     enum:
       - FORWARD
       - RETURN
-    description: "The transfer service type.\n\nFORWARD: Foward transfer.\nRETURN: Return transfer."
+      - UNKNOWN
+    description: "The transfer service type.\n\nFORWARD: Forward transfer.\nRETURN: Return transfer.\nUNKNOWN: Unknown transfer."
   AssignmentTransferService:
     type: object
     properties:
