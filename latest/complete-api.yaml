@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.20.0-feature-PZS-8758-services.7
+  version: 0.20.0-feature-PZS-8758-services.8
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -467,6 +467,7 @@ definitions:
       - FORWARD
       - RETURN
       - DELIVERY_DAY
+      - UNKNOWN
   AssignmentRecipientSingleOrder:
     type: object
     properties:
@@ -488,7 +489,8 @@ definitions:
       - REDIRECT_POBOX
       - PREFERRED_DAY
       - CUSTOMER_DESTINATION
-    description: "The recipient standing order service type.\n\nHOLD_MAIL: Hold mail order.\nREDIRECT_TEMPORARY: Temporary redirect order.\nREDIRECT_PERMANENT: Permanent redirect order.\nREDIRECT_MOVED: Moved redirect order.\nREDIRECT_POBOX: PoBox redirect order.\nPREFERRED_DAY: Preferred day order.\nCUSTOMER_DESTINATION: Customer destination order."
+      - UNKNOWN
+    description: "The recipient standing order service type.\n\nHOLD_MAIL: Hold mail order.\nREDIRECT_TEMPORARY: Temporary redirect order.\nREDIRECT_PERMANENT: Permanent redirect order.\nREDIRECT_MOVED: Moved redirect order.\nREDIRECT_POBOX: PoBox redirect order.\nPREFERRED_DAY: Preferred day order.\nCUSTOMER_DESTINATION: Customer destination order.\nUNKNOWN: Unknown order."
   AssignmentRecipientStandingOrder:
     type: object
     properties:
@@ -541,7 +543,8 @@ definitions:
       - INSPECTION
       - ADD_PRODUCT_CODE
       - RETURN
-    description: "The sender single order type.\n\nFORWARD: Forward order.\nINSPECTION: Inspection order.\nADD_PRODUCT_CODE: Add a product code to the mailpiece.\nRETURN: Return order."
+      - UNKNOWN
+    description: "The sender single order type.\n\nFORWARD: Forward order.\nINSPECTION: Inspection order.\nADD_PRODUCT_CODE: Add a product code to the mailpiece.\nRETURN: Return order.\nUNKNOWN: Unknown order."
   AssignmentSenderSingleOrder:
     type: object
     properties:
@@ -557,6 +560,7 @@ definitions:
     type: string
     enum:
       - ADD_PRODUCT_CODE
+      - UNKNOWN
   AssignmentSenderStandingOrder:
     type: object
     properties:
@@ -575,7 +579,8 @@ definitions:
       - DISCARDED
       - COMPLETED
       - SKIPPED
-    description: "Defines the action that has been taken for a specific service.\n\nAPPLIED: The service has been used to sort the mailpiece. The service has not been physically applied to the mailpiece and should be reapplied when the mailpiece is sorted again.\nDISCARDED: The service has not been applied to this mailpiece and will not be considered again for further sorting cycles.\nCOMPLETED: The service has been physically applied (ie. a new label has been printed) to this mailpiece and will not be considered again for further sorting cycles.\nSKIPPED: The service has been skipped in this sorting cycle, but might be considered again in a further sorting cycle."
+      - UNKNOWN
+    description: "Defines the action that has been taken for a specific service.\n\nAPPLIED: The service has been used to sort the mailpiece. The service has not been physically applied to the mailpiece and should be reapplied when the mailpiece is sorted again.\nDISCARDED: The service has not been applied to this mailpiece and will not be considered again for further sorting cycles.\nCOMPLETED: The service has been physically applied (ie. a new label has been printed) to this mailpiece and will not be considered again for further sorting cycles.\nSKIPPED: The service has been skipped in this sorting cycle, but might be considered again in a further sorting cycle.\nUNKNOWN: It could not be determined which action was taken."
   AssignmentServiceImpact:
     type: string
     enum:
@@ -583,9 +588,10 @@ definitions:
       - RETURN
       - REDIRECT
       - HOLD
+      - ADD_PRODUCT_CODE
       - NONE
       - UNKNOWN
-    description: "Defines the impact the service had on the mailpiece when it was applied.\n\nDELAY: The mailpiece will be delayed.\nRETURN: The mailpiece will be returned.\nREDIRECT: The mailpiece will be redirected.\nHOLD: The mailpiece will be withheld.\nNONE: The service had no impact on the mailpiece.\nUNKNOWN: It could not be determined which impact the service had on the mailpiece."
+    description: "Defines the impact the service had on the mailpiece when it was applied.\n\nDELAY: The mailpiece is delayed.\nRETURN: The mailpiece is returned.\nREDIRECT: The mailpiece is redirected.\nHOLD: The mailpiece is withheld.\nADD_PRODUCT_CODE: A product code is added to the parcel.\nNONE: The service has no impact on the mailpiece.\nUNKNOWN: It cannot be determined which impact the service has on the mailpiece."
   AssignmentServiceResult:
     type: object
     properties:
