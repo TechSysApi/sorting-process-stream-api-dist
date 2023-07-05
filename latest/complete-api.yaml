@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.19.0
+  version: 0.20.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -461,6 +461,47 @@ definitions:
       - deliveryPointType
     additionalProperties: false
     description: 'Resolved address keys.'
+  AssignmentRecipientSingleOrderType:
+    type: string
+    enum:
+      - FORWARD
+      - RETURN
+      - DELIVERY_DAY
+      - UNKNOWN
+  AssignmentRecipientSingleOrder:
+    type: object
+    properties:
+      serviceOrderKey:
+        type: string
+      type:
+        $ref: 'AssignmentRecipientSingleOrderType'
+    required:
+      - serviceOrderKey
+      - type
+    additionalProperties: false
+  AssignmentRecipientStandingOrderType:
+    type: string
+    enum:
+      - HOLD_MAIL
+      - REDIRECT_TEMPORARY
+      - REDIRECT_PERMANENT
+      - REDIRECT_MOVED
+      - REDIRECT_POBOX
+      - PREFERRED_DAY
+      - CUSTOMER_DESTINATION
+      - UNKNOWN
+    description: "The recipient standing order service type.\n\nHOLD_MAIL: Hold mail order.\nREDIRECT_TEMPORARY: Temporary redirect order.\nREDIRECT_PERMANENT: Permanent redirect order.\nREDIRECT_MOVED: Moved redirect order.\nREDIRECT_POBOX: PoBox redirect order.\nPREFERRED_DAY: Preferred day order.\nCUSTOMER_DESTINATION: Customer destination order.\nUNKNOWN: Unknown order."
+  AssignmentRecipientStandingOrder:
+    type: object
+    properties:
+      serviceOrderKey:
+        type: string
+      type:
+        $ref: 'AssignmentRecipientStandingOrderType'
+    required:
+      - serviceOrderKey
+      - type
+    additionalProperties: false
   AssignmentRequestReason:
     type: string
     enum:
@@ -495,6 +536,91 @@ definitions:
       - poboxSectorNumber
     additionalProperties: false
     description: Sector
+  AssignmentSenderSingleOrderType:
+    type: string
+    enum:
+      - FORWARD
+      - INSPECTION
+      - ADD_PRODUCT_CODE
+      - RETURN
+      - UNKNOWN
+    description: "The sender single order type.\n\nFORWARD: Forward order.\nINSPECTION: Inspection order.\nADD_PRODUCT_CODE: Add a product code to the mailpiece.\nRETURN: Return order.\nUNKNOWN: Unknown order."
+  AssignmentSenderSingleOrder:
+    type: object
+    properties:
+      serviceOrderKey:
+        type: string
+      type:
+        $ref: 'AssignmentSenderSingleOrderType'
+    required:
+      - serviceOrderKey
+      - type
+    additionalProperties: false
+  AssignmentSenderStandingOrderType:
+    type: string
+    enum:
+      - ADD_PRODUCT_CODE
+      - UNKNOWN
+  AssignmentSenderStandingOrder:
+    type: object
+    properties:
+      serviceOrderKey:
+        type: string
+      type:
+        $ref: 'AssignmentSenderStandingOrderType'
+    required:
+      - serviceOrderKey
+      - type
+    additionalProperties: false
+  AssignmentServiceActions:
+    type: string
+    enum:
+      - APPLIED
+      - DISCARDED
+      - COMPLETED
+      - SKIPPED
+      - UNKNOWN
+    description: "Defines the action that has been taken for a specific service.\n\nAPPLIED: The service has been used to sort the mailpiece. The service has not been physically applied to the mailpiece and should be reapplied when the mailpiece is sorted again.\nDISCARDED: The service has not been applied to this mailpiece and will not be considered again for further sorting cycles.\nCOMPLETED: The service has been physically applied (ie. a new label has been printed) to this mailpiece and will not be considered again for further sorting cycles.\nSKIPPED: The service has been skipped in this sorting cycle, but might be considered again in a further sorting cycle.\nUNKNOWN: It could not be determined which action was taken."
+  AssignmentServiceImpact:
+    type: string
+    enum:
+      - DELAY
+      - RETURN
+      - REDIRECT
+      - HOLD
+      - ADD_PRODUCT_CODE
+      - NONE
+      - UNKNOWN
+    description: "Defines the impact the service had on the mailpiece when it was applied.\n\nDELAY: The mailpiece is delayed.\nRETURN: The mailpiece is returned.\nREDIRECT: The mailpiece is redirected.\nHOLD: The mailpiece is withheld.\nADD_PRODUCT_CODE: A product code is added to the parcel.\nNONE: The service has no impact on the mailpiece.\nUNKNOWN: It cannot be determined which impact the service has on the mailpiece."
+  AssignmentServiceResult:
+    type: object
+    properties:
+      transferService:
+        $ref: 'AssignmentTransferService'
+        description: 'A transfer service was used.'
+      senderSingleOrder:
+        $ref: 'AssignmentSenderSingleOrder'
+        description: 'A sender single order was used (formerly known as SOS).'
+      senderStandingOrder:
+        $ref: 'AssignmentSenderStandingOrder'
+        description: 'A sender standing order was used.'
+      recipientSingleOrder:
+        $ref: 'AssignmentRecipientSingleOrder'
+        description: 'A recipient single order was used.'
+      recipientStandingOrder:
+        $ref: 'AssignmentRecipientStandingOrder'
+        description: 'A recipient standing order was used.'
+      action:
+        $ref: 'AssignmentServiceActions'
+        description: 'The action that was taken for this service.'
+      impact:
+        $ref: 'AssignmentServiceImpact'
+        description: 'The impact the service had on the mailpiece.'
+    required:
+      - action
+      - impact
+    additionalProperties: false
+    description: "Describes the effect of a service that was used\nduring sorting of a mailpiece.\n\nOnly one of the order properties is filled out."
   AssignmentSortPlan:
     type: object
     properties:
@@ -681,6 +807,11 @@ definitions:
       nextProcessingLocation:
         $ref: 'AssignmentProcessingLocation'
         description: "Defines the intended location where the mail piece is processed next. Note that this is not necessarily another sorting location\nand that this just represents the intention at the moment when this event was generated.\nThis information can be used to search for missing mail pieces (ie. where should it have been sent to?)"
+      serviceResults:
+        type: array
+        items:
+          $ref: 'AssignmentServiceResult'
+        description: 'Defines what services were detected and which one has been applied.'
     required:
       - expectedDeliveryDate
       - sortingEndpointGroup
@@ -729,6 +860,21 @@ definitions:
       - specialSortName
     additionalProperties: false
     description: 'Special sort result evaluated for the mailpiece'
+  AssignmentTransferServiceType:
+    type: string
+    enum:
+      - FORWARD
+      - RETURN
+      - UNKNOWN
+    description: "The transfer service type.\n\nFORWARD: Forward transfer.\nRETURN: Return transfer.\nUNKNOWN: Unknown transfer."
+  AssignmentTransferService:
+    type: object
+    properties:
+      type:
+        $ref: 'AssignmentTransferServiceType'
+    required:
+      - type
+    additionalProperties: false
   DestinationAssigned:
     type: object
     properties:
