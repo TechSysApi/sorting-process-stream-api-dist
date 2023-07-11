@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.21.0
+  version: 0.22.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -36,6 +36,9 @@ definitions:
         type: string
         description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
         maxLength: 200
+      simulation:
+        $ref: 'Simulation'
+        description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
       submitted:
         $ref: 'Submitted'
         description: 'Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.'
@@ -53,6 +56,22 @@ definitions:
       - mailpieceGlobalKey
     additionalProperties: false
     description: 'Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).'
+  SimulationOrigin:
+    type: string
+    enum:
+      - SIMULATOR
+      - FRANKING_LICENSE
+      - LOCATION
+    description: "Describes how/where this event was simulated.\n- SIMULATOR: A simulator was used, no real mailpiece exists\n- FRANKING_LICENSE: The parcel belongs to a Franking license that is use for testing only\n- LOCATION: the location where that mailpiece was sorted is marked as a test location (eg. testing before go live)"
+  Simulation:
+    type: object
+    properties:
+      origin:
+        $ref: 'SimulationOrigin'
+    required:
+      - origin
+    additionalProperties: false
+    description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\nany other event, but should be markes as a simulated event. Some actions should not be executed for simulated events\n(eg. no notifaction should be sent to the actual customer).\nSimulated events must not affect any non-simulated mailpeices in any way.\n\nThe Simulation object provides additional information about the purpose of this simulation."
   AssignmentAddressingDestinationResult:
     type: object
     properties:
