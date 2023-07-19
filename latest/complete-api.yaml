@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.25.0
+  version: 0.26.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -814,7 +814,7 @@ definitions:
     properties:
       expectedDeliveryDate:
         $ref: 'DateOnly'
-        description: 'Expected delivery date of the mailpiece with consideration of current inter center traffic.'
+        description: "Expected delivery date of the mailpiece with consideration of current inter center traffic.\nIf this is not set, the delivery date could not be calculated (for example because the mailpiece was sorted into a special sort)."
       addressingDestinationResult:
         $ref: 'AssignmentAddressingDestinationResult'
         description: 'Sorting result for delivery to an addressing destination.'
@@ -839,7 +839,6 @@ definitions:
           $ref: 'AssignmentServiceResult'
         description: 'Defines what services were detected and which one has been applied.'
     required:
-      - expectedDeliveryDate
       - sortingEndpointGroup
       - sortingProduct
       - intendedProcessing
