@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.29.0-feature-PZS-9271-new-service-actions.1
+  version: 0.29.0-feature-PZS-9271-new-service-actions.2
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -502,8 +502,10 @@ definitions:
     properties:
       serviceOrderKey:
         type: string
+        description: 'The key of the recipient single order.'
       type:
         $ref: 'AssignmentRecipientSingleOrderType'
+        description: 'The type of the recipient single order.'
     required:
       - serviceOrderKey
       - type
@@ -525,8 +527,10 @@ definitions:
     properties:
       serviceOrderKey:
         type: string
+        description: 'The key of the recipient standing order.'
       type:
         $ref: 'AssignmentRecipientStandingOrderType'
+        description: 'The type of the recipient standing order.'
     required:
       - serviceOrderKey
       - type
@@ -579,8 +583,10 @@ definitions:
     properties:
       serviceOrderKey:
         type: string
+        description: 'The key of the sender single order.'
       type:
         $ref: 'AssignmentSenderSingleOrderType'
+        description: 'The type of the sender single order.'
     required:
       - serviceOrderKey
       - type
@@ -595,8 +601,10 @@ definitions:
     properties:
       serviceOrderKey:
         type: string
+        description: 'The key of the sender standing order.'
       type:
         $ref: 'AssignmentSenderStandingOrderType'
+        description: 'The type of the sender standing order.'
     required:
       - serviceOrderKey
       - type
@@ -917,8 +925,12 @@ definitions:
   AssignmentTransferService:
     type: object
     properties:
+      transferEventId:
+        type: string
+        description: "The ID of the transfer event (from Nemo or VMax) that\ntriggered a transfer case.\n\nIs not set if the transfer case was triggered by a\ntransfer label on the mailpiece or a manually triggered\ntransfer case."
       type:
         $ref: 'AssignmentTransferServiceType'
+        description: 'The type of transfer.'
     required:
       - type
     additionalProperties: false
