@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.30.0
+  version: 0.30.1-feature-fix-update-api.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -76,364 +76,6 @@ definitions:
       - origin
     additionalProperties: false
     description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\n(eg. no notification should be sent to the actual customer).\nSimulated events must not affect any non-simulated mailpieces in any way.\n\nThe Simulation object provides additional information about the purpose of this simulation."
-  DischargeIdentifierTags:
-    type: object
-    properties:
-      nationalMailpieceIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
-      internationalMailpieceIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
-      customsNumbers:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
-      boxIds:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
-    additionalProperties: false
-    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
-  DischargeMailpieceEvent:
-    type: object
-    properties:
-      eventId:
-        type: string
-        description: 'Globally Unique identifier for this mailpiece event.'
-      mailpieceGlobalKey:
-        type: string
-        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
-        maxLength: 200
-      simulation:
-        $ref: 'DischargeSimulation'
-        description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
-      discharged:
-        $ref: 'Discharged'
-        description: 'Mailpiece has been discharged to an outlet on an automatic sorter.'
-    required:
-      - eventId
-      - mailpieceGlobalKey
-    additionalProperties: false
-  DischargeReason:
-    type: string
-    enum:
-      - SORTED
-      - FALLBACK_OUTLET
-      - ITEM_DISAPPEARED
-      - DIMENSION_ERROR
-      - WEIGHT_ERROR
-      - DIRECT_SORTING_MODE
-    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode."
-  DischargeSimulationOrigin:
-    type: string
-    enum:
-      - SIMULATOR
-      - FRANKING_LICENSE
-      - LOCATION
-    description: "Describes how/where this event was simulated.\r\n- SIMULATOR: A simulator was used, no real mailpiece exists\r\n- FRANKING_LICENSE: The parcel belongs to a Franking license that is use for testing only\r\n- LOCATION: the location where that mailpiece was sorted is marked as a test location (eg. testing before go live)"
-  DischargeSimulation:
-    type: object
-    properties:
-      origin:
-        $ref: 'DischargeSimulationOrigin'
-    required:
-      - origin
-    additionalProperties: false
-    description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\r\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\r\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\r\n(eg. no notification should be sent to the actual customer).\r\nSimulated events must not affect any non-simulated mailpieces in any way.\r\n\r\nThe Simulation object provides additional information about the purpose of this simulation."
-  DischargeSortingUnit:
-    type: object
-    properties:
-      sortingUnitKey:
-        type: string
-        description: 'Unique key identifying the sorting unit.'
-        maxLength: 200
-      locationKey:
-        type: string
-        description: 'Unique key identifying the location.'
-        maxLength: 200
-    required:
-      - sortingUnitKey
-      - locationKey
-    additionalProperties: false
-    description: 'Sorting unit at a location performing the sorting process step.'
-  Discharged:
-    type: object
-    properties:
-      sortingTime:
-        $ref: 'DateTime'
-        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
-      processingItemId:
-        type: string
-        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
-        maxLength: 32
-      sortingCycleId:
-        type: string
-        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
-        maxLength: 200
-      timestamp:
-        $ref: 'DateTime'
-        description: 'Date & time of the event occurance. This is the time when message was received from the sorting unit.'
-      idTags:
-        $ref: 'DischargeIdentifierTags'
-        description: 'Barcodes and other tags identifying the mailpiece.'
-      sortingUnit:
-        $ref: 'DischargeSortingUnit'
-        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
-      outlet:
-        type: string
-        description: "Name of the outlet where the mailpiece has been discharged to.\r\nThe outlet is not available if the mailpiece has not been sorted on a automatic sorter (eg. manual bulk sorting)"
-        maxLength: 200
-      dischargeReason:
-        $ref: 'DischargeReason'
-        description: "Specifies why the mailpiece has been discharged. Normally this should be SORTED to indicate\r\nthat the sorting unit did what the Sorting Control System requested."
-      sourceId:
-        type: string
-        description: "The id of the device that sent the message to confirm the discharge.\r\nThis MUST NOT be used to build business logic and can change at any time. It SHOULD\r\nonly be used for diagnostics or statistical purposes."
-        maxLength: 200
-    required:
-      - sortingTime
-      - processingItemId
-      - sortingCycleId
-      - timestamp
-      - sortingUnit
-      - dischargeReason
-      - sourceId
-    additionalProperties: false
-  SubmittedIdentifierTags:
-    type: object
-    properties:
-      nationalMailpieceIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
-      internationalMailpieceIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
-      customsNumbers:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
-      boxIds:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
-    additionalProperties: false
-    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
-  SubmittedInformationCarrier:
-    type: object
-    properties:
-      symbology:
-        $ref: 'SubmittedSymbology'
-        description: 'Symbology of an information carrier'
-      value:
-        type: string
-        description: 'Value of an information carrier'
-      marker:
-        $ref: 'SubmittedMarker'
-        description: 'The information carrier represents the given marker.'
-    additionalProperties: false
-    description: "Identified and captured information carrier (e.g. barcodes, logos).\n\nEither (symbology AND value) OR marker has to be set."
-  SubmittedLegalForTrade:
-    type: object
-    properties:
-      weight:
-        type: boolean
-        description: 'Specifies if the measured weight is legal for trade.'
-      dimension:
-        type: boolean
-        description: 'Specifies if the measured dimension is legal for trade.'
-    required:
-      - weight
-      - dimension
-    additionalProperties: false
-  SubmittedMailpieceEvent:
-    type: object
-    properties:
-      eventId:
-        type: string
-        description: 'Globally Unique identifier for this mailpiece event.'
-        maxLength: 200
-      mailpieceGlobalKey:
-        type: string
-        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
-        maxLength: 200
-      simulation:
-        $ref: 'SubmittedSimulation'
-        description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
-      submitted:
-        $ref: 'Submitted'
-        description: 'Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.'
-    required:
-      - eventId
-      - mailpieceGlobalKey
-    additionalProperties: false
-  SubmittedMarker:
-    type: string
-    enum:
-      - BUSINESS_REPLY
-      - INTERNATIONAL_BUSINESS_REPLY
-    description: "BUSINESS_REPLY: the mailpiece is marked as a business reply\nINTERNATIONAL_BUSINESS_REPLY: the mailpiece is marked as an international business reply"
-  SubmittedPhysicalProperties:
-    type: object
-    properties:
-      length:
-        type: number
-        description: 'Length in [mm].'
-      width:
-        type: number
-        description: 'Width in [mm].'
-      height:
-        type: number
-        description: 'Height in [mm].'
-      weight:
-        type: number
-        description: 'Actual weight in [g].'
-      boxVolume:
-        type: number
-        description: 'The volume of the minimal box that encloses the whole mailpiece in dm³.'
-      realVolume:
-        type: number
-        description: 'The actual volume of the mailpiece in dm³.'
-      shape:
-        $ref: 'SubmittedShape'
-        description: 'The shape category of the mailpiece.'
-      legalForTrade:
-        $ref: 'SubmittedLegalForTrade'
-        description: 'Specifies what measurements are legal for trade.'
-      scaleId:
-        type: string
-        description: 'The technical id of the scale that measured the weight.'
-    required:
-      - legalForTrade
-    additionalProperties: false
-    description: 'Physical properties of the submitted mailpiece.'
-  SubmittedShape:
-    type: string
-    enum:
-      - BOX
-      - IRREGULAR
-    description: "BOX The mailpiece is mostly shaped like a box.\r\nIRREGULAR The shape of the mailpiece is not clearly defined (eg. bags)"
-  SubmittedSimulationOrigin:
-    type: string
-    enum:
-      - SIMULATOR
-      - FRANKING_LICENSE
-      - LOCATION
-    description: "Describes how/where this event was simulated.\r\n- SIMULATOR: A simulator was used, no real mailpiece exists\r\n- FRANKING_LICENSE: The parcel belongs to a Franking license that is use for testing only\r\n- LOCATION: the location where that mailpiece was sorted is marked as a test location (eg. testing before go live)"
-  SubmittedSimulation:
-    type: object
-    properties:
-      origin:
-        $ref: 'SubmittedSimulationOrigin'
-    required:
-      - origin
-    additionalProperties: false
-    description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\r\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\r\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\r\n(eg. no notification should be sent to the actual customer).\r\nSimulated events must not affect any non-simulated mailpieces in any way.\r\n\r\nThe Simulation object provides additional information about the purpose of this simulation."
-  SubmittedSortingProcess:
-    type: string
-    enum:
-      - AUTOMATIC
-      - MANUAL_CODING_REJECT
-      - MANUAL_CODING_LIGHT
-      - MANUAL_CODING_BULK
-      - MANUAL_CODING_BULK_AUTOMATIC
-    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods"
-  SubmittedSortingUnit:
-    type: object
-    properties:
-      sortingUnitKey:
-        type: string
-        description: 'Unique key identifying the sorting unit.'
-        maxLength: 200
-      locationKey:
-        type: string
-        description: 'Unique key identifying the location.'
-        maxLength: 200
-    required:
-      - sortingUnitKey
-      - locationKey
-    additionalProperties: false
-    description: 'Sorting unit at a location performing the sorting process step.'
-  SubmittedSymbology:
-    type: string
-    enum:
-      - NOT_RECOGNIZED
-      - ADDON
-      - CODABAR
-      - CODE_39
-      - CODE_93
-      - CODE_128
-      - DATA_MATRIX
-      - EAN_8
-      - EAN_13
-      - EAN_128
-      - I2OF5
-      - MAXI_CODE
-      - PDF_417
-      - QR
-      - UPC_A
-      - UPC_E
-    description: "NOT_RECOGNIZED The symbology is not recognized\r\nADDON Barcode Zusatz zu EAN und UPC\r\nCODABAR Barcode Codabar\r\nCODE_39 Barcode 39\r\nCODE_93 Barcode 93\r\nCODE_128 Barcode 128\r\nDATA_MATRIX Data Matrix Code\r\nEAN_8 International Article Number\r\nEAN_13 International Article Number\r\nEAN_128 International Article Number\r\nI2OF5 Interleved 2 of 5 Code\r\nMAXI_CODE Barcode Maxicode\r\nPDF_417 Barcode PDF417\r\nQR QR Barcode\r\nUPC_A Barcode Universal Product Codes (Normalversion)\r\nUPC_E Barcode Universal Product Codes (Kurzvariante)"
-  Submitted:
-    type: object
-    properties:
-      sortingTime:
-        $ref: 'DateTime'
-        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
-      processingItemId:
-        type: string
-        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
-        maxLength: 32
-      sortingCycleId:
-        type: string
-        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
-        maxLength: 200
-      timestamp:
-        $ref: 'DateTime'
-        description: 'Date & time of the event occurance. This is very close to the time when the corresponding message was received from the sorting unit.'
-      idTags:
-        $ref: 'SubmittedIdentifierTags'
-        description: 'Barcodes and other tags identifying the mailpiece.'
-      sortingUnit:
-        $ref: 'SubmittedSortingUnit'
-        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
-      informationCarriers:
-        type: array
-        items:
-          $ref: 'SubmittedInformationCarrier'
-        description: 'Identified and captured information carrier (e.g. barcodes, logos)'
-      sortingProcess:
-        $ref: 'SubmittedSortingProcess'
-        description: 'Defines the sorting process.'
-      physicalProperties:
-        $ref: 'SubmittedPhysicalProperties'
-        description: "Physical properties of the submitted mailpiece\r\nHINT: always not null, but the values might be null inside."
-      sourceId:
-        type: string
-        description: "The technical id of the device that orinally produced this event.\r\nThis value MUST NOT be used to infer information about the sorting process and may only be used for\r\ndignostics and analysis of the performance of the specific device."
-    required:
-      - sortingTime
-      - processingItemId
-      - sortingCycleId
-      - timestamp
-      - sortingUnit
-      - sortingProcess
-      - physicalProperties
-      - sourceId
-    additionalProperties: false
-    description: 'Event produced when an mailpiece is submitted to a sorting unit.'
   CodedAddressProducer:
     type: string
     enum:
@@ -1435,6 +1077,364 @@ definitions:
       - source
       - workflow
     additionalProperties: false
+  DischargeIdentifierTags:
+    type: object
+    properties:
+      nationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
+      internationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
+      customsNumbers:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
+      boxIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
+    additionalProperties: false
+    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
+  DischargeMailpieceEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Globally Unique identifier for this mailpiece event.'
+      mailpieceGlobalKey:
+        type: string
+        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+        maxLength: 200
+      simulation:
+        $ref: 'DischargeSimulation'
+        description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
+      discharged:
+        $ref: 'Discharged'
+        description: 'Mailpiece has been discharged to an outlet on an automatic sorter.'
+    required:
+      - eventId
+      - mailpieceGlobalKey
+    additionalProperties: false
+  DischargeReason:
+    type: string
+    enum:
+      - SORTED
+      - FALLBACK_OUTLET
+      - ITEM_DISAPPEARED
+      - DIMENSION_ERROR
+      - WEIGHT_ERROR
+      - DIRECT_SORTING_MODE
+    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode."
+  DischargeSimulationOrigin:
+    type: string
+    enum:
+      - SIMULATOR
+      - FRANKING_LICENSE
+      - LOCATION
+    description: "Describes how/where this event was simulated.\r\n- SIMULATOR: A simulator was used, no real mailpiece exists\r\n- FRANKING_LICENSE: The parcel belongs to a Franking license that is use for testing only\r\n- LOCATION: the location where that mailpiece was sorted is marked as a test location (eg. testing before go live)"
+  DischargeSimulation:
+    type: object
+    properties:
+      origin:
+        $ref: 'DischargeSimulationOrigin'
+    required:
+      - origin
+    additionalProperties: false
+    description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\r\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\r\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\r\n(eg. no notification should be sent to the actual customer).\r\nSimulated events must not affect any non-simulated mailpieces in any way.\r\n\r\nThe Simulation object provides additional information about the purpose of this simulation."
+  DischargeSortingUnit:
+    type: object
+    properties:
+      sortingUnitKey:
+        type: string
+        description: 'Unique key identifying the sorting unit.'
+        maxLength: 200
+      locationKey:
+        type: string
+        description: 'Unique key identifying the location.'
+        maxLength: 200
+    required:
+      - sortingUnitKey
+      - locationKey
+    additionalProperties: false
+    description: 'Sorting unit at a location performing the sorting process step.'
+  Discharged:
+    type: object
+    properties:
+      sortingTime:
+        $ref: 'DateTime'
+        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
+      processingItemId:
+        type: string
+        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
+        maxLength: 32
+      sortingCycleId:
+        type: string
+        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
+        maxLength: 200
+      timestamp:
+        $ref: 'DateTime'
+        description: 'Date & time of the event occurance. This is the time when message was received from the sorting unit.'
+      idTags:
+        $ref: 'DischargeIdentifierTags'
+        description: 'Barcodes and other tags identifying the mailpiece.'
+      sortingUnit:
+        $ref: 'DischargeSortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
+      outlet:
+        type: string
+        description: "Name of the outlet where the mailpiece has been discharged to.\r\nThe outlet is not available if the mailpiece has not been sorted on a automatic sorter (eg. manual bulk sorting)"
+        maxLength: 200
+      dischargeReason:
+        $ref: 'DischargeReason'
+        description: "Specifies why the mailpiece has been discharged. Normally this should be SORTED to indicate\r\nthat the sorting unit did what the Sorting Control System requested."
+      sourceId:
+        type: string
+        description: "The id of the device that sent the message to confirm the discharge.\r\nThis MUST NOT be used to build business logic and can change at any time. It SHOULD\r\nonly be used for diagnostics or statistical purposes."
+        maxLength: 200
+    required:
+      - sortingTime
+      - processingItemId
+      - sortingCycleId
+      - timestamp
+      - sortingUnit
+      - dischargeReason
+      - sourceId
+    additionalProperties: false
+  SubmittedIdentifierTags:
+    type: object
+    properties:
+      nationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
+      internationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
+      customsNumbers:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
+      boxIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
+    additionalProperties: false
+    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
+  SubmittedInformationCarrier:
+    type: object
+    properties:
+      symbology:
+        $ref: 'SubmittedSymbology'
+        description: 'Symbology of an information carrier'
+      value:
+        type: string
+        description: 'Value of an information carrier'
+      marker:
+        $ref: 'SubmittedMarker'
+        description: 'The information carrier represents the given marker.'
+    additionalProperties: false
+    description: "Identified and captured information carrier (e.g. barcodes, logos).\n\nEither (symbology AND value) OR marker has to be set."
+  SubmittedLegalForTrade:
+    type: object
+    properties:
+      weight:
+        type: boolean
+        description: 'Specifies if the measured weight is legal for trade.'
+      dimension:
+        type: boolean
+        description: 'Specifies if the measured dimension is legal for trade.'
+    required:
+      - weight
+      - dimension
+    additionalProperties: false
+  SubmittedMailpieceEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Globally Unique identifier for this mailpiece event.'
+        maxLength: 200
+      mailpieceGlobalKey:
+        type: string
+        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+        maxLength: 200
+      simulation:
+        $ref: 'SubmittedSimulation'
+        description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
+      submitted:
+        $ref: 'Submitted'
+        description: 'Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.'
+    required:
+      - eventId
+      - mailpieceGlobalKey
+    additionalProperties: false
+  SubmittedMarker:
+    type: string
+    enum:
+      - BUSINESS_REPLY
+      - INTERNATIONAL_BUSINESS_REPLY
+    description: "BUSINESS_REPLY: the mailpiece is marked as a business reply\nINTERNATIONAL_BUSINESS_REPLY: the mailpiece is marked as an international business reply"
+  SubmittedPhysicalProperties:
+    type: object
+    properties:
+      length:
+        type: number
+        description: 'Length in [mm].'
+      width:
+        type: number
+        description: 'Width in [mm].'
+      height:
+        type: number
+        description: 'Height in [mm].'
+      weight:
+        type: number
+        description: 'Actual weight in [g].'
+      boxVolume:
+        type: number
+        description: 'The volume of the minimal box that encloses the whole mailpiece in dm³.'
+      realVolume:
+        type: number
+        description: 'The actual volume of the mailpiece in dm³.'
+      shape:
+        $ref: 'SubmittedShape'
+        description: 'The shape category of the mailpiece.'
+      legalForTrade:
+        $ref: 'SubmittedLegalForTrade'
+        description: 'Specifies what measurements are legal for trade.'
+      scaleId:
+        type: string
+        description: 'The technical id of the scale that measured the weight.'
+    required:
+      - legalForTrade
+    additionalProperties: false
+    description: 'Physical properties of the submitted mailpiece.'
+  SubmittedShape:
+    type: string
+    enum:
+      - BOX
+      - IRREGULAR
+    description: "BOX The mailpiece is mostly shaped like a box.\r\nIRREGULAR The shape of the mailpiece is not clearly defined (eg. bags)"
+  SubmittedSimulationOrigin:
+    type: string
+    enum:
+      - SIMULATOR
+      - FRANKING_LICENSE
+      - LOCATION
+    description: "Describes how/where this event was simulated.\r\n- SIMULATOR: A simulator was used, no real mailpiece exists\r\n- FRANKING_LICENSE: The parcel belongs to a Franking license that is use for testing only\r\n- LOCATION: the location where that mailpiece was sorted is marked as a test location (eg. testing before go live)"
+  SubmittedSimulation:
+    type: object
+    properties:
+      origin:
+        $ref: 'SubmittedSimulationOrigin'
+    required:
+      - origin
+    additionalProperties: false
+    description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\r\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\r\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\r\n(eg. no notification should be sent to the actual customer).\r\nSimulated events must not affect any non-simulated mailpieces in any way.\r\n\r\nThe Simulation object provides additional information about the purpose of this simulation."
+  SubmittedSortingProcess:
+    type: string
+    enum:
+      - AUTOMATIC
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_LIGHT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_AUTOMATIC
+    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods"
+  SubmittedSortingUnit:
+    type: object
+    properties:
+      sortingUnitKey:
+        type: string
+        description: 'Unique key identifying the sorting unit.'
+        maxLength: 200
+      locationKey:
+        type: string
+        description: 'Unique key identifying the location.'
+        maxLength: 200
+    required:
+      - sortingUnitKey
+      - locationKey
+    additionalProperties: false
+    description: 'Sorting unit at a location performing the sorting process step.'
+  SubmittedSymbology:
+    type: string
+    enum:
+      - NOT_RECOGNIZED
+      - ADDON
+      - CODABAR
+      - CODE_39
+      - CODE_93
+      - CODE_128
+      - DATA_MATRIX
+      - EAN_8
+      - EAN_13
+      - EAN_128
+      - I2OF5
+      - MAXI_CODE
+      - PDF_417
+      - QR
+      - UPC_A
+      - UPC_E
+    description: "NOT_RECOGNIZED The symbology is not recognized\r\nADDON Barcode Zusatz zu EAN und UPC\r\nCODABAR Barcode Codabar\r\nCODE_39 Barcode 39\r\nCODE_93 Barcode 93\r\nCODE_128 Barcode 128\r\nDATA_MATRIX Data Matrix Code\r\nEAN_8 International Article Number\r\nEAN_13 International Article Number\r\nEAN_128 International Article Number\r\nI2OF5 Interleved 2 of 5 Code\r\nMAXI_CODE Barcode Maxicode\r\nPDF_417 Barcode PDF417\r\nQR QR Barcode\r\nUPC_A Barcode Universal Product Codes (Normalversion)\r\nUPC_E Barcode Universal Product Codes (Kurzvariante)"
+  Submitted:
+    type: object
+    properties:
+      sortingTime:
+        $ref: 'DateTime'
+        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
+      processingItemId:
+        type: string
+        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
+        maxLength: 32
+      sortingCycleId:
+        type: string
+        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
+        maxLength: 200
+      timestamp:
+        $ref: 'DateTime'
+        description: 'Date & time of the event occurance. This is very close to the time when the corresponding message was received from the sorting unit.'
+      idTags:
+        $ref: 'SubmittedIdentifierTags'
+        description: 'Barcodes and other tags identifying the mailpiece.'
+      sortingUnit:
+        $ref: 'SubmittedSortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
+      informationCarriers:
+        type: array
+        items:
+          $ref: 'SubmittedInformationCarrier'
+        description: 'Identified and captured information carrier (e.g. barcodes, logos)'
+      sortingProcess:
+        $ref: 'SubmittedSortingProcess'
+        description: 'Defines the sorting process.'
+      physicalProperties:
+        $ref: 'SubmittedPhysicalProperties'
+        description: "Physical properties of the submitted mailpiece\r\nHINT: always not null, but the values might be null inside."
+      sourceId:
+        type: string
+        description: "The technical id of the device that orinally produced this event.\r\nThis value MUST NOT be used to infer information about the sorting process and may only be used for\r\ndignostics and analysis of the performance of the specific device."
+    required:
+      - sortingTime
+      - processingItemId
+      - sortingCycleId
+      - timestamp
+      - sortingUnit
+      - sortingProcess
+      - physicalProperties
+      - sourceId
+    additionalProperties: false
+    description: 'Event produced when an mailpiece is submitted to a sorting unit.'
   AssignmentAddressingDestinationResult:
     type: object
     properties:
@@ -1660,6 +1660,7 @@ definitions:
     enum:
       - FORWARD
       - RETURN
+      - UNKNOWN
   AssignmentLetterOrder:
     type: object
     properties:
