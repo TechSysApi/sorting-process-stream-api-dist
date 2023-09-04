@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.30.1
+  version: 0.31.0-feature-update-letter-order.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -305,16 +305,13 @@ definitions:
   AssignmentLetterOrder:
     type: object
     properties:
-      serviceOrderKey:
-        type: string
-        description: 'The key of the letter order, equal to the data matrix code.'
       type:
         $ref: 'AssignmentLetterOrderType'
         description: 'The type of the letter order.'
     required:
-      - serviceOrderKey
       - type
     additionalProperties: false
+    description: "The Assignement Letter Orders are printed onto the mailpiece, the DataMatrixCode has a OrderKey segment\nwhich for technical reason is not filled correctly."
   AssignmentMailpieceAttributes:
     type: object
     properties:
