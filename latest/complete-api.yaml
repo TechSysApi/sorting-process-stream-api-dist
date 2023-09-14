@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.32.0
+  version: 0.33.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -634,8 +634,9 @@ definitions:
       - SKIPPED
       - PREVIOUSLY_DISCARDED
       - PREVIOUSLY_COMPLETED
+      - TO_BE_PROCESSED
       - UNKNOWN
-    description: "Defines the action that has been taken for a specific service.\n\nAPPLIED: The service has been used to sort the mailpiece. The service has not been physically applied to the mailpiece and should be reapplied when the mailpiece is sorted again.\nDISCARDED: The service has not been applied to this mailpiece and will not be considered again for further sorting cycles.\nCOMPLETED: The service has been physically applied (ie. a new label has been printed) to this mailpiece and will not be considered again for further sorting cycles.\nSKIPPED: The service has been skipped in this sorting cycle, but might be considered again in a further sorting cycle.\nPREVIOUSLY_DISCARDED: The service has been discarded in an earlier sorting cycle.\nPREVIOUSLY_COMPLETED: The service has been completed in an earlier sorting cycle.\nUNKNOWN: It could not be determined which action was taken."
+    description: "Defines the action that has been taken for a specific service.\n\nAPPLIED: The service has been used to sort the mailpiece. The service has not been physically applied to the mailpiece and should be reapplied when the mailpiece is sorted again.\nDISCARDED: The service has not been applied to this mailpiece and will not be considered again for further sorting cycles.\nCOMPLETED: The service has been physically applied (ie. a new label has been printed) to this mailpiece and will not be considered again for further sorting cycles.\nSKIPPED: The service has been skipped in this sorting cycle, but might be considered again in a further sorting cycle.\nPREVIOUSLY_DISCARDED: The service has been discarded in an earlier sorting cycle.\nPREVIOUSLY_COMPLETED: The service has been completed in an earlier sorting cycle.\nTO_BE_PROCESSED: The service has been detected, but requires further processing (e.g. at the manual coding station).\nUNKNOWN: It could not be determined which action was taken."
   AssignmentServiceImpact:
     type: string
     enum:
