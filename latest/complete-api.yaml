@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.33.0
+  version: 0.34.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -640,14 +640,13 @@ definitions:
   AssignmentServiceImpact:
     type: string
     enum:
-      - DELAY
       - RETURN
-      - REDIRECT
+      - FORWARD
       - HOLD
       - ADD_PRODUCT_CODE
       - NONE
       - UNKNOWN
-    description: "Defines the impact the service had on the mailpiece when it was applied.\n\nDELAY: The mailpiece is delayed.\nRETURN: The mailpiece is returned.\nREDIRECT: The mailpiece is redirected.\nHOLD: The mailpiece is withheld.\nADD_PRODUCT_CODE: A product code is added to the parcel.\nNONE: The service has no impact on the mailpiece.\nUNKNOWN: It cannot be determined which impact the service has on the mailpiece."
+    description: "Defines the impact the service had on the mailpiece when it was applied.\n\nRETURN: The mailpiece is returned.\nFORWARD: The mailpiece is forwarded.\nHOLD: The mailpiece is withheld.\nADD_PRODUCT_CODE: A product code is added to the parcel.\nNONE: The service has no impact on the mailpiece.\nUNKNOWN: It cannot be determined which impact the service has on the mailpiece."
   AssignmentServiceResult:
     type: object
     properties:
