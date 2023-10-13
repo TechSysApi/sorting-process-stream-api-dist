@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.35.0
+  version: 0.36.0-Feature-adjustments.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -1094,10 +1094,33 @@ definitions:
       state:
         $ref: 'CodedPersonalizedAddressState'
         description: 'Indicates state of a validated person living at a specific address'
+      undeliverable:
+        $ref: 'CodedUndeliverableReason'
+        description: 'Mailpiece is not deliverable to the recipient because of the personalized address state (e.g. NIXIE). Indicates the reason of the personalized address state.'
     required:
       - source
     additionalProperties: false
     description: 'Address captured by an enrichment device or delivered by a preannouncement system'
+  CodedCodingReasonCase:
+    type: string
+    enum:
+      - NO_IMAGE
+      - POOR_IMAGE
+      - REJECTED_TIMEOUT
+      - REJECTED_TECHNICAL
+      - REJECTED_UNRESOLVABLE
+      - NO_ADDRESS_ON_MAILPIECE
+    description: "NO_IMAGE = Technical problem: e.g. images are black, too dark / white or no information is visible. The image quality does not allow reading of the address.\nPOOR_IMAGE = Insufficient image quality or poor contrast. The image quality does not allow reading of the address.\nREJECTED_TIMEOUT = Reject due to a timeout. In this case the solution doesn't deliver a result within a specific time.\nREJECTED_TECHNICAL = Reject due to technical problems (e.g. black images, poor resolution, blurred images, only partial image build up ).\nREJECTED_UNRESOLVABLE = Reject due to unresolved mailpiece (e.g. no address visible on the image, only a part of the sender visible, recipient coding cannot be done).\nNO_ADDRESS_ON_MAILPIECE = Reject because mailpiece either has no visible address, is damaged or in case it is not a Kleinware doesn't contain a barcode."
+  CodedCodingReason:
+    type: object
+    properties:
+      codingStationType:
+        $ref: 'CodedCodingStationType'
+        description: 'Type of the coding station for the coding reason.'
+      reason:
+        $ref: 'CodedCodingReasonCase'
+        description: 'Case, why a coding reason was thrown.'
+    additionalProperties: false
   CodedCodingResult:
     type: object
     properties:
@@ -1129,6 +1152,13 @@ definitions:
         description: 'The images captured during coding'
     additionalProperties: false
     description: 'Information captured by the coding systems during coding'
+  CodedCodingStationType:
+    type: string
+    enum:
+      - RECOGNITION
+      - VIDEO
+      - MANUAL
+    description: "RECOGNITION = Cases that may occur in OCR.\nVIDEO = Cases that may occur in VCS.\nMANUAL = Cases that may occur in MCS."
   CodedDay:
     type: string
     enum:
@@ -1213,14 +1243,6 @@ definitions:
       - ADDRESS_REGION
       - BARCODE_REGION
     description: "ADDRESS_REGION  This image contains an address region of interest (ROI)\r\nBARCODE_ROI  This image contains a barcode region of interest (ROI)"
-  CodedDetectionError:
-    type: string
-    enum:
-      - MULTIPLE_MAILPIECES_RECOGNIZED
-      - NO_MAILPIECE_RECOGNIZED
-      - IMAGE_ERROR
-      - OTHER
-    description: "MULTIPLE_MAILPIECES_RECOGNIZED   More than one mailpiece detected on an image\r\nNO_MAILPIECE_RECOGNIZED  No mailpiece detected on the image\r\nIMAGE_ERROR Error in image (e.g. poor quality)\r\nOTHER Other cases"
   CodedEnrichmentStep:
     type: object
     properties:
@@ -1301,21 +1323,6 @@ definitions:
         items:
           type: string
         description: "Contains the list of international identifiers to track a mail item internationally.\nThe id is printed on the mailpiece by the sender."
-      nationalLetterIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of national identifiers to track a letter item within the country.\nThe id can only be created once during a machine sorting cycle and printed on the letter."
-      internationalLetterIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of Universal Postal Union Identifier (UPU-Id) as technical identifiers to track an letter item internationally.\nThe id can only be created once during a machine sorting cycle and printed on the letter.\nRemarks: BDE converts the UPU-Id into a shorter version"
-      customerLetterIds:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of national identifiers from the customer to track a letter item within the country.'
       customsNumbers:
         type: array
         items:
@@ -1326,14 +1333,6 @@ definitions:
         items:
           type: string
         description: 'Contains the list of identifiers to track a Dispobox within the country.'
-      sortingProcessId:
-        type: string
-        description: 'The technical identifier to track an mail item during the complete sorting process. UPU-Id is set as default.'
-        maxLength: 200
-      sortingProcessStepId:
-        type: string
-        description: "Contains the Unique Mailpiece-Image Identifier (UMI) as machine independent technical identifier to reference a machine sorting cycle of a mail item. The identifier is used to access the mail images.\nThe id is created during every machine sorting cycle."
-        maxLength: 200
     additionalProperties: false
     description: 'Contains a list of logistic or technical identifiers to track a mail item within a specific context.'
   CodedImageProducer:
@@ -1382,9 +1381,6 @@ definitions:
         items:
           $ref: 'CodedDetectedElements'
         description: 'Indicates the ROIs found on the image'
-      detectionError:
-        $ref: 'CodedDetectionError'
-        description: "Indicates if there is an error regarding the image\nACTION: will become mandatory (mandatory since version:5.1)"
       face:
         $ref: 'CodedFace'
         description: 'Face of the parcel on which the image is located'
@@ -1479,8 +1475,8 @@ definitions:
       - GENERAL_PARTNERSHIP
       - LIMITED_PARTNERSHIP
       - PARTNERSHIP_LIMITED_BY_SHARES
-      - AG_LTD_PUBLIC_LIMITED_COMPANY
-      - GMBH_SARL_PRIVATE_LIMITED_COMPANY
+      - PUBLIC_LIMITED_COMPANY
+      - PRIVATE_LIMITED_COMPANY
       - COOPERATIVE
       - ASSOCIATION
       - FOUNDATION
@@ -1494,15 +1490,15 @@ definitions:
       - STATE_RECOGNIZED_CHURCH
       - FOREIGN_LEGAL_FORM_BRANCH
       - FOREIGN_COUNTRY_EMBASSY
-      - INERNATIONAL_ORGANISZATION
+      - INERNATIONAL_ORGANIZATION
       - FEDERAL_WORKS
       - CANTONAL_WORKS
       - DISTRICT_WORKS
       - MUNICIPAL_WORKS
       - PUBLIC_ENTITY_WORKS
-      - POSTAL_ORGANISATIONAL_UNITS
+      - POSTAL_ORGANIZATIONAL_UNITS
       - SUBSIDIARIES
-    description: "Rechtsform, wird nur bei Geschäftspersonen abgefüllt\r\nINDIVIDUAL = Einzelfirma\r\nSIMPLE_PARTNERSHIP = Einfache Gesellschaft\r\nGENERAL_PARTNERSHIP = Kollektivgesellschaft\r\nLIMITED_PARTNERSHIP = Kommanditgesellschaft\r\nPARTNERSHIP_LIMITED_BY_SHARES = Kommanditaktiengesellschaft\r\nAG_LTD_PUBLIC_LIMITED_COMPANY = Aktiengesellschaft/LTD\r\nGMBH_SARL_PRIVATE_LIMETED_COMPANY = GMBH/SARL\r\nCOOPERATIVE = Genossenschaft\r\nASSOCIATION = Verein\r\nFOUNDATION = Stiftung\r\nBRANCH_OF_FOREIGN_AG_LTD =\r\nBRANCH_OF_FOREIGN_SARL = Ausländische GMBH-Filiale;SARL\r\nFEDERAL_ADMINISTRATION = Verwaltung des Bundes\r\nCANTONAL_ADMINISTRATION = Verwaltung des Kantons\r\nDISTRICT_ADMINISTRATION = Verwaltung des Bezirks\r\nMUNICIPAL_ADMINISTRATION = Verwaltung der Gemeinde\r\nPUBLIC_ENTITY_ADMINISTRATION = öffentliche Körperschaft (Verw.)\r\nSTATE_RECOGNIZED_CHURCH = Staatlich anerkannte Kirche\r\nFOREIGN_LEGAL_FORM_BRANCH = Ausländische Rechtsform (Filiale)\r\nFOREIGN_COUNTRY_EMBASSY = Ausländischer Staat (Botschaft)\r\nINERNATIONAL_ORGANISZATION = Internationale Organisation\r\nFEDERAL_WORKS = Betriebe des Bundes\r\nCANTONAL_WORKS = Betriebe des Kantons\r\nDISTRICT_WORKS = Betriebe des Bezirks\r\nMUNICIPAL_WORKS = Betriebe der Gemeinde\r\nPUBLIC_ENTITY_WORKS = öffentliche Körperschaft (Betriebe)\r\nPOSTAL_ORGANISATIONAL_UNITS = Organisaitonseinheit der Post\r\nSUBSIDIARIES = Konzerngesellschaft der Post"
+    description: "Rechtsform, wird nur bei Geschäftspersonen abgefüllt\r\nINDIVIDUAL = Einzelfirma\r\nSIMPLE_PARTNERSHIP = Einfache Gesellschaft\r\nGENERAL_PARTNERSHIP = Kollektivgesellschaft\r\nLIMITED_PARTNERSHIP = Kommanditgesellschaft\r\nPARTNERSHIP_LIMITED_BY_SHARES = Kommanditaktiengesellschaft\r\nPUBLIC_LIMITED_COMPANY = Aktiengesellschaft/LTD\r\nPRIVATE_LIMITED_COMPANY = GMBH/SARL\r\nCOOPERATIVE = Genossenschaft\r\nASSOCIATION = Verein\r\nFOUNDATION = Stiftung\r\nBRANCH_OF_FOREIGN_AG_LTD =\r\nBRANCH_OF_FOREIGN_SARL = Ausländische GMBH-Filiale;SARL\r\nFEDERAL_ADMINISTRATION = Verwaltung des Bundes\r\nCANTONAL_ADMINISTRATION = Verwaltung des Kantons\r\nDISTRICT_ADMINISTRATION = Verwaltung des Bezirks\r\nMUNICIPAL_ADMINISTRATION = Verwaltung der Gemeinde\r\nPUBLIC_ENTITY_ADMINISTRATION = öffentliche Körperschaft (Verw.)\r\nSTATE_RECOGNIZED_CHURCH = Staatlich anerkannte Kirche\r\nFOREIGN_LEGAL_FORM_BRANCH = Ausländische Rechtsform (Filiale)\r\nFOREIGN_COUNTRY_EMBASSY = Ausländischer Staat (Botschaft)\r\nINERNATIONAL_ORGANIZATION = Internationale Organisation\r\nFEDERAL_WORKS = Betriebe des Bundes\r\nCANTONAL_WORKS = Betriebe des Kantons\r\nDISTRICT_WORKS = Betriebe des Bezirks\r\nMUNICIPAL_WORKS = Betriebe der Gemeinde\r\nPUBLIC_ENTITY_WORKS = öffentliche Körperschaft (Betriebe)\r\nPOSTAL_ORGANIZATIONAL_UNITS = Organisaitonseinheit der Post\r\nSUBSIDIARIES = Konzerngesellschaft der Post"
   CodedLocality:
     type: object
     properties:
@@ -1899,6 +1895,15 @@ definitions:
       - origin
     additionalProperties: false
     description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\r\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\r\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\r\n(eg. no notification should be sent to the actual customer).\r\nSimulated events must not affect any non-simulated mailpieces in any way.\r\n\r\nThe Simulation object provides additional information about the purpose of this simulation."
+  CodedSortingProcess:
+    type: string
+    enum:
+      - AUTOMATIC
+      - MANUAL_CODING_REJECT
+      - MANUAL_CODING_LIGHT
+      - MANUAL_CODING_BULK
+      - MANUAL_CODING_BULK_AUTOMATIC
+    description: "AUTOMATIC Sorted by the sorter\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods"
   CodedSortingUnit:
     type: object
     properties:
@@ -1950,6 +1955,15 @@ definitions:
       - REGULAR
       - EARLY
       - EVENING
+  CodedUndeliverableReason:
+    type: string
+    enum:
+      - DECEASED
+      - RECEIVER_NOT_DETERMINED
+      - COMPANY_EXTINGUISHED
+      - FORWARDING_DEADLINE_EXPIRED
+      - NO_FORWARDING_ADDRESS_AVAILABLE
+    description: "DECEASED = The person is deceased\nRECEIVER_NOT_DETERMINED = Receiver could not be determined at stated address.\nCOMPANY_EXTINGUISHED = The company does not exist anymore.\nFORWARDING_DEADLINE_EXPIRED = Relocated, forwarding address is expired.\nNO_FORWARDING_ADDRESS_AVAILABLE = No forwarding address is available."
   CodedValidationStep:
     type: string
     enum:
@@ -1986,7 +2000,12 @@ definitions:
         description: 'Indicates if more image based coding is possible.'
       rejectReason:
         $ref: 'CodedRejectReason'
-        description: 'Reject that may happen during coding process. They can be discharged as special sorts by the sorting system.'
+        description: "Reject that may happen during coding process. They can be discharged as special sorts by the sorting system.\n\nDEPRECATED: Will be removed at the next update! Please replace it with the codingReason below."
+      codingReasons:
+        type: array
+        items:
+          $ref: 'CodedCodingReason'
+        description: 'Coding reasons that may happen during coding process. They can be used as special sorts or for a statistical purpose.'
     required:
       - enrichmentSteps
       - maxImageBasedCodingReached
@@ -2018,6 +2037,9 @@ definitions:
       workflow:
         $ref: 'CodedWorkflow'
         description: 'Detailed insights in the internal workflow steps which ocurred to deliver the information in this event'
+      sortingProcess:
+        $ref: 'CodedSortingProcess'
+        description: 'Defines how and where the mailpiece was sorted.'
     required:
       - timestamp
       - processingItemId
