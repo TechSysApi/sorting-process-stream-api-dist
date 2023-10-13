@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.36.0-Feature-adjustments.1
+  version: 0.36.0-Feature-adjustments.2
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
