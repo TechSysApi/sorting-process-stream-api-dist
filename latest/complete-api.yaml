@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.37.0
+  version: 0.38.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -370,6 +370,24 @@ definitions:
       - mailpieceGlobalKey
     additionalProperties: false
     description: 'Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).'
+  AssignmentMilitaryOrderType:
+    type: string
+    enum:
+      - MILITARY
+    description: "The the military order type.\n\nMILITARY: The service order is of type military"
+  AssignmentMilitaryOrder:
+    type: object
+    properties:
+      serviceOrderKey:
+        type: string
+        description: 'The key of the military  order.'
+      type:
+        $ref: 'AssignmentMilitaryOrderType'
+        description: 'The type of the military order.'
+    required:
+      - serviceOrderKey
+      - type
+    additionalProperties: false
   AssignmentOutlet:
     type: object
     properties:
@@ -668,6 +686,9 @@ definitions:
       letterOrder:
         $ref: 'AssignmentLetterOrder'
         description: 'A letter service order was used.'
+      militaryOrder:
+        $ref: 'AssignmentMilitaryOrder'
+        description: 'A military service order was used.'
       action:
         $ref: 'AssignmentServiceActions'
         description: 'The action that was taken for this service.'
