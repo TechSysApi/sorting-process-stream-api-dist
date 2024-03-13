@@ -5,7 +5,7 @@ info:
   contact:
     name: techsysplus
     email: devops.techsysplus@post.ch
-  version: 0.45.0
+  version: 0.46.0-Feature-update-discharge-api.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2174,7 +2174,8 @@ definitions:
       - DIMENSION_ERROR
       - WEIGHT_ERROR
       - DIRECT_SORTING_MODE
-    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode."
+      - MANUAL_CODING_TIMEOUT
+    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: Manual coding of item was started but not finished (e.g. logout of coding client, new coding was started, browser shut-down...)"
   DischargeSimulationOrigin:
     type: string
     enum:
