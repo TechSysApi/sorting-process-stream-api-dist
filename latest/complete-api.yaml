@@ -3,9 +3,9 @@ info:
   title: 'Sorting Process Stream API'
   description: 'Exposing different events occurring during the sorting process steps a mailpiece has to undergo to pass through a sorting center. Providing information about assigned destinations, applied services, read coding information, and more.'
   contact:
-    name: techsysplus
-    email: devops.techsysplus@post.ch
-  version: 0.46.0-Feature-update-discharge-api.1
+    name: 'Sorting Software Solutions'
+    email: sort.software.solutions@post.ch
+  version: 0.46.0-Feature-update-discharge-api.2
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
