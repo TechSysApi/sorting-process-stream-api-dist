@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 0.47.0-feature-external-carrier-id.2
+  version: 0.47.0-feature-external-carrier-id.3
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
