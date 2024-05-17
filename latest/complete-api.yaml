@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 0.48.0
+  version: 0.49.0-feature-sorting-process.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -363,7 +363,7 @@ definitions:
         type: array
         items:
           $ref: 'AssignmentProductCode'
-        description: 'Detected product codes for the mailpiece.'
+        description: "Product codes used for sorting. This may not reflect the same codes that are on a mailpiece, since we can add or remove codes depending on the sorting use case.\nFor the exact information present on a mailpiece, see InformationCarriers in the submitted event"
       productModuleKeys:
         type: array
         items:
@@ -889,7 +889,8 @@ definitions:
       - MANUAL_CODING_LIGHT
       - MANUAL_CODING_BULK
       - MANUAL_CODING_BULK_AUTOMATIC
-    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods"
+      - MANUAL_PRESORTING
+    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods\r\nMANUAL_PRESORTING Device where items are coded automatically and sorted manually to achieve a to achieve a pre-sortation"
   AssignmentSortingProduct:
     type: object
     properties:
@@ -2477,7 +2478,8 @@ definitions:
       - MANUAL_CODING_LIGHT
       - MANUAL_CODING_BULK
       - MANUAL_CODING_BULK_AUTOMATIC
-    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods"
+      - MANUAL_PRESORTING
+    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods\r\nMANUAL_PRESORTING Device where items are coded automatically and sorted manually to achieve a to achieve a pre-sortation"
   SubmittedSortingUnit:
     type: object
     properties:
