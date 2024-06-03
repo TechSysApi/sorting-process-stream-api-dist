@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.0.0
+  version: 1.1.0-feature-updateDeps.2
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -260,7 +260,8 @@ definitions:
       - INTERNATIONAL_MAILPIECE
       - MILITARY
       - INTERNAL_POSTCODE
-    description: "NONE = no service\nDOMICILE = Domiziladresse\nPICK_POST = Pickpost\nMY_POST_24 = myPost24\nPO_BOX = Post Office Box (Postfach)\nPOSTE_RESTANTE = Retain at swiss post (Postlagernd)\nCOMPANY_POSTCODE = Company Postcode indicates (FirmenPLZ)\nINTERNATIONAL_PARCEL = International address (Export)\nMILITARY = Military address\nINTERNAL_POSTCODE = Swiss post internal postcode"
+      - CUSTOMER_DESTINATION
+    description: "NONE = no service\r\nDOMICILE = Domiziladresse\r\nPICK_POST = Pickpost\r\nMY_POST_24 = myPost24\r\nPO_BOX = Post Office Box (Postfach)\r\nPOSTE_RESTANTE = Retain at swiss post (Postlagernd)\r\nCOMPANY_POSTCODE = Company Postcode indicates (FirmenPLZ)\r\nINTERNATIONAL_PARCEL = International address (Export)\r\nMILITARY = Military address\r\nINTERNAL_POSTCODE = Swiss post internal postcode\r\nCUSTOMER_DESTINATION = Customer specific destination"
   AssignmentDistributionStrategy:
     type: string
     enum:
