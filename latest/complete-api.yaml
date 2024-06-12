@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.2.0
+  version: 1.2.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
