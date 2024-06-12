@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.2.0-feature-remove-country-partner.1
+  version: 1.2.0-feature-remove-country-partner.2
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -597,7 +597,8 @@ definitions:
       - OUTLET_NO_CAPACITY
       - OUTLET_MISSED
       - UNDEFINED_ERROR
-    description: "The reason why the machine requests mailpiece attributes.\nList of values:\n- SCANNER_TIMEOUT: Item has reached the max allowed amount of scans and the last attempt was a \"no answer\" from scanner.\n- ITEM_INDUCTION_ERROR: Induction error item detected (occupied twice, wrong tray).\n- ITEM_DISCHARGE_ERROR: Discharge faults.\n- ITEM_ERROR: Item has a Logical error.\n- ITEM_TRACKING_ERROR: item was inducted with tracking fault.\n- ITEM_STRAY: Stray item detected.\n- ITEM_OCCUPIED_TWICE_ERROR: item was inducted on occupied tray.\n- ITEM_NO_OUTLETGROUP: No sorting information / outlet group has been received for this item.\n- ITEM_OUTLETGROUP_REQUIRED: The machine requires an outlet group.\n- OUTLET_NOT_AVAILABLE: No available chute could be found.\n- OUTLET_UNKNOWN: Logical destination not defined.\n- OUTLET_NO_CAPACITY: The destination outlet has no more capacity.\n- OUTLET_MISSED: Sortcode has been updated (push or repetitive requests), physical outlet already passed.\n- UNDEFINED_ERROR: Internal error happened."
+      - OUTLETGROUP_UNKNOWN
+    description: "The reason why the machine requests mailpiece attributes.\nList of values:\n- SCANNER_TIMEOUT: Item has reached the max allowed amount of scans and the last attempt was a \"no answer\" from scanner.\n- ITEM_INDUCTION_ERROR: Induction error item detected (occupied twice, wrong tray).\n- ITEM_DISCHARGE_ERROR: Discharge faults.\n- ITEM_ERROR: Item has a Logical error.\n- ITEM_TRACKING_ERROR: item was inducted with tracking fault.\n- ITEM_STRAY: Stray item detected.\n- ITEM_OCCUPIED_TWICE_ERROR: item was inducted on occupied tray.\n- ITEM_NO_OUTLETGROUP: No sorting information / outlet group has been received for this item.\n- ITEM_OUTLETGROUP_REQUIRED: The machine requires an outlet group.\n- OUTLET_NOT_AVAILABLE: No available chute could be found.\n- OUTLET_UNKNOWN: Logical destination not defined.\n- OUTLET_NO_CAPACITY: The destination outlet has no more capacity.\n- OUTLET_MISSED: Sortcode has been updated (push or repetitive requests), physical outlet already passed.\n- UNDEFINED_ERROR: Internal error happened.\n- OUTLETGROUP_UNKNOWN: The outlet group is unknown."
   AssignmentSectorDestination:
     type: object
     properties:
