@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.2.1
+  version: 1.3.0-feature-PZS-9881.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -314,6 +314,11 @@ definitions:
         items:
           $ref: 'AssignmentExternalCarrierId'
         description: 'Contains the list of identifier and type from external carriers like Fedex.'
+      letterTrackingIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to track mix mail with a data matrix code (DMC80).'
     additionalProperties: false
     description: 'Contains a list of logistic or technical identifiers to identify a mailpiece within a specific context'
   AssignmentLetterOrderType:
@@ -2188,6 +2193,11 @@ definitions:
         items:
           $ref: 'DischargeExternalCarrierId'
         description: 'Contains the list of identifier and type from external carriers like Fedex.'
+      letterTrackingIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to track mix mail with a data matrix code (DMC80).'
     additionalProperties: false
     description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
   DischargeMailpieceEvent:
@@ -2342,6 +2352,11 @@ definitions:
         items:
           $ref: 'SubmittedExternalCarrierId'
         description: 'Contains the list of identifier and type from external carriers like Fedex.'
+      letterTrackingIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to track mix mail with a data matrix code (DMC80).'
     additionalProperties: false
     description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
   SubmittedInformationCarrier:
