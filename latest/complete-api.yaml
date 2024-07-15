@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.4.0
+  version: 1.4.1-feature-update-jenkins-config.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
