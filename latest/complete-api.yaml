@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.8.0
+  version: 1.9.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2334,6 +2334,25 @@ definitions:
       - dischargeReason
       - sourceId
     additionalProperties: false
+  SubmittedConveyingAidDetectionType:
+    type: string
+    enum:
+      - IMAGE
+      - INFORMATION_CARRIER
+    description: "IMAGE                    The conveying aid was detected by image recognition\r\nINFORMATION_CARRIER:     The conveying aid was detected because its marker barcode was recognized"
+  SubmittedConveyingAid:
+    type: object
+    properties:
+      detectionType:
+        $ref: 'SubmittedConveyingAidDetectionType'
+        description: 'The means by which the conveying aid was detected.'
+      informationCarrier:
+        type: string
+        description: "The information carrier by which the conveying aid was detected.\r\nIs only set if the detection type is INFORMATION_CARRIER."
+    required:
+      - detectionType
+    additionalProperties: false
+    description: 'The conveying aid a mailpiece is on.'
   SubmittedExternalCarrierId:
     type: object
     properties:
@@ -2471,6 +2490,9 @@ definitions:
       scaleId:
         type: string
         description: 'The technical id of the scale that measured the weight.'
+      conveyingAid:
+        $ref: 'SubmittedConveyingAid'
+        description: "Information about the conveying aid the mailpiece is on.\r\n\r\nIf the mailpiece is not on a conveying aid, this is not set."
     required:
       - legalForTrade
     additionalProperties: false
