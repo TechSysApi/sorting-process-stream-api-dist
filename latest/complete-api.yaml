@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.11.0
+  version: 1.12.0-feature-updateDischarge.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -25,6 +25,10 @@ definitions:
   Int:
     type: integer
     description: '<a href="https://swagger.io/docs/specification/data-models/data-types/#numbers">Number @asType integer</a>'
+  ResourceIdentifier:
+    type: string
+    description: "Follows the naming convention of the swiss post for resources of a sorting installation.\n\"=aaaaaa.bbbbbbb+ccccc-ddddddddd\"\na: System part   (=) (system part in the overall system; position) max. 5 characters\nb: Module        (.) (module; type; position) max. 7 characters\nc: Component     (+) (installation location of the element; position) max. 5 characters\nd: Element       (-) (element type; number) max. 9 characters"
+    maxLength: 200
   DateOnly:
     type: string
     description: "<a href=\"https://swagger.io/docs/specification/data-models/data-types/#string\">String @format date</a>,\nas defined by <a href=\"https://tools.ietf.org/html/rfc3339#section-5.6\">RFC 3339, section 5.6</a>,\nfor example: <code>2017-07-21</code>."
@@ -2260,7 +2264,8 @@ definitions:
       - DIRECT_SORTING_MODE
       - MANUAL_CODING_TIMEOUT
       - ITEM_REAPPEARED
-    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: Manual coding of item was started but not finished (e.g. logout of coding client, new coding was started, browser shut-down...)\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking."
+      - STRAY_ITEM
+    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: Manual coding of item was started but not finished (e.g. logout of coding client, new coding was started, browser shut-down...)\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking.\n- STRAY_ITEM: An unknown mailpiece was discharged. This usually happens if the sorter lost track of a mailpiece and reported it as ITEM_DISAPPEARED. Then later the item is found again and discharged to an\n               outlet. This is currenlty only known to happen on the old sorters."
   DischargeSimulationOrigin:
     type: string
     enum:
@@ -2317,16 +2322,17 @@ definitions:
         $ref: 'DischargeSortingUnit'
         description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
       outlet:
-        type: string
+        $ref: 'ResourceIdentifier'
         description: "Name of the outlet where the mailpiece has been discharged to.\r\nThe outlet is not available if the mailpiece has not been sorted on a automatic sorter (eg. manual bulk sorting)"
-        maxLength: 200
       dischargeReason:
         $ref: 'DischargeReason'
         description: "Specifies why the mailpiece has been discharged. Normally this should be SORTED to indicate\r\nthat the sorting unit did what the Sorting Control System requested."
       sourceId:
         type: string
         description: "The id of the device that sent the message to confirm the discharge.\r\nThis MUST NOT be used to build business logic and can change at any time. It SHOULD\r\nonly be used for diagnostics or statistical purposes."
-        maxLength: 200
+      processPoint:
+        $ref: 'ResourceIdentifier'
+        description: "The location where the mailpiece was discharged.\r\nACTION: will be marked as mandatory as soon as all producers and consumers support it."
     required:
       - sortingTime
       - processingItemId
