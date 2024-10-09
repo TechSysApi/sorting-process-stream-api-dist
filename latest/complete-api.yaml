@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.13.0
+  version: 1.14.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -63,7 +63,7 @@ definitions:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
-    description: 'Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).'
+    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nMore documentation is available at https://wikit.post.ch/x/ilk2Og."
   SimulationOrigin:
     type: string
     enum:
@@ -1054,9 +1054,13 @@ definitions:
   InternalProvisioning:
     type: object
     properties:
+      startTime:
+        type: string
+        description: "Defines the time at which sorting of this sorting product starts.\nIf no start time is defined, the sorting product is active from the beginning of the post day.\nNote: The time is NOT relative to the post day.\ne.g. \"06:00\""
+        pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
       clearanceTime:
         type: string
-        description: "The latest time when containers, e.g. rollboxes are brought to the staging area for loading into the transport.\nIf no clearance time is defined, the sorting product is processed as long as the sort plan is executed.\nNote: The time is NOT relative to the post day.\ne.g. \"06:00\""
+        description: "The latest time mailpieces can be sorted into this sorting product.\nIf no clearance time is defined, the sorting product is processed as long as the sort plan is executed.\nNote: The time is NOT relative to the post day.\ne.g. \"06:00\""
         pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
     additionalProperties: false
     description: "Internal provisioning is intended for sorting products that do not leave\nthe current location."
@@ -1067,13 +1071,21 @@ definitions:
         type: string
         description: "The provisioning scenario that was used for this assignment.\nThis scenario defines the provisioning times depending on how the\ntransport is organized."
         maxLength: 200
+      startTime:
+        type: string
+        description: "Defines the time at which sorting of this sorting product starts.\nIf no start time is defined, the sorting product is active from the beginning of the post day.\nNote: The time is NOT relative to the post day.\ne.g. \"06:00\""
+        pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
       clearanceTime:
         type: string
         description: "The latest time when containers, e.g. rollboxes are brought to the staging area for loading into the transport.\nA clearance time is always defined.\nNote: The time is NOT relative to the post day.\ne.g. \"06:00\""
         pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+      deliveryDayOffset:
+        $ref: 'Int'
+        description: 'The minimum time in days it takes for a mailpiece sorted into this sorting product to be delivered.'
     required:
       - provisioningScenario
       - clearanceTime
+      - deliveryDayOffset
     additionalProperties: false
     description: "Transport provisioning is intended for sorting products that leave the\ncurrent location by transport."
   CodedAddressProducer:
