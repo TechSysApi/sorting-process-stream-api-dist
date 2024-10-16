@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.14.0
+  version: 1.14.0-sallinmarc-1729096165789.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -63,7 +63,7 @@ definitions:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
-    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nMore documentation is available at https://wikit.post.ch/x/ilk2Og."
+    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nAdditionally, the header 'x-origin-sorting-unit' might be used to filter by sorting unit.\r\nMore documentation is available at https://wikit.post.ch/x/ilk2Og."
   SimulationOrigin:
     type: string
     enum:
