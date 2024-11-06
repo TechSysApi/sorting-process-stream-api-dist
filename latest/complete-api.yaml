@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.14.0
+  version: 1.15.0-feature-process-point-in-subitted.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -17,18 +17,21 @@ paths:
       responses:
         '200':
           schema: {type: object, $ref: 'MailpieceEvent'}
+    x-data:
+      classification: P1
+      confidentiality: C3
 definitions:
   DateTime:
     type: string
     description: "<a href=\"https://swagger.io/docs/specification/data-models/data-types/#string\">String @format date-time</a>,\nas defined by <a href=\"https://tools.ietf.org/html/rfc3339#section-5.6\">RFC 3339, section 5.6</a>,\nfor example: <code>2014-05-22T10:42:42.542+00:00</code>."
     format: date-time
-  Int:
-    type: integer
-    description: '<a href="https://swagger.io/docs/specification/data-models/data-types/#numbers">Number @asType integer</a>'
   ResourceIdentifier:
     type: string
     description: "Follows the naming convention of the swiss post for resources of a sorting installation.\n\"=aaaaaa.bbbbbbb+ccccc-ddddddddd\"\na: System part   (=) (system part in the overall system; position) max. 5 characters\nb: Module        (.) (module; type; position) max. 7 characters\nc: Component     (+) (installation location of the element; position) max. 5 characters\nd: Element       (-) (element type; number) max. 9 characters"
     maxLength: 200
+  Int:
+    type: integer
+    description: '<a href="https://swagger.io/docs/specification/data-models/data-types/#numbers">Number @asType integer</a>'
   DateOnly:
     type: string
     description: "<a href=\"https://swagger.io/docs/specification/data-models/data-types/#string\">String @format date</a>,\nas defined by <a href=\"https://tools.ietf.org/html/rfc3339#section-5.6\">RFC 3339, section 5.6</a>,\nfor example: <code>2017-07-21</code>."
@@ -63,7 +66,7 @@ definitions:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
-    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nMore documentation is available at https://wikit.post.ch/x/ilk2Og."
+    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nAdditionally, the header 'x-origin-sorting-unit' might be used to filter by sorting unit.\r\nMore documentation is available at https://wikit.post.ch/x/ilk2Og."
   SimulationOrigin:
     type: string
     enum:
@@ -2628,7 +2631,13 @@ definitions:
         description: "Physical properties of the submitted mailpiece\r\nHINT: always not null, but the values might be null inside."
       sourceId:
         type: string
-        description: "The technical id of the device that orinally produced this event.\r\nThis value MUST NOT be used to infer information about the sorting process and may only be used for\r\ndignostics and analysis of the performance of the specific device."
+        description: "The technical id of the device that orinally produced this event.\r\nThis value MUST NOT be used to infer information about the sorting process and may only be used for\r\ndignostics and analysis of the performance of the specific device.\r\nDEPRECATED: will be removed as soon as all producers and consumers have switched to the processPoint and the image source."
+      processPoint:
+        $ref: 'ResourceIdentifier'
+        description: "The location from which the submit was sent.\r\nThis value MUST NOT be used to infer information about the sorting process and may only be used for dignostics and analysis of the performance of the specific device.\r\nACTION: will be marked as mandatory as soon as all producers and consumers support it."
+      imageSource:
+        $ref: 'ResourceIdentifier'
+        description: 'The source of the image that is related to the submit message, usually a DS or DWS tunnel.'
     required:
       - sortingTime
       - processingItemId
