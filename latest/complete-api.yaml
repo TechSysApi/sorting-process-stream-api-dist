@@ -1,11 +1,11 @@
 swagger: '2.0'
 info:
   title: 'Sorting Process Stream API'
-  description: 'Exposing different events occurring during the sorting process steps a mailpiece has to undergo to pass through a sorting center. Providing information about assigned destinations, applied services, read coding information, and more.'
+  description: "Exposing different events occurring during the sorting process steps a mailpiece has to undergo to pass through a sorting center. Providing information about assigned destinations, applied services, read coding information, and more.\nMore documentation is available at https://wikit.post.ch/x/ilk2Og.\n"
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.15.0
+  version: 1.15.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -41,7 +41,7 @@ definitions:
     properties:
       eventId:
         type: string
-        description: 'Globally Unique identifier for this mailpiece event.'
+        description: "Globally Unique identifier for this mailpiece event.\r\nUse this to deduplicate events. Kafka and the producer only guarantee at least once."
         maxLength: 200
       mailpieceGlobalKey:
         type: string
@@ -52,21 +52,21 @@ definitions:
         description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
       submitted:
         $ref: 'Submitted'
-        description: 'Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.'
+        description: "Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.\r\nThis event also contains data about the physical properties of the mailpiece."
       coded:
         $ref: 'Coded'
-        description: 'Mailpiece has been enriched with address and informationcarrier information during the automatic or manual coding process.'
-      discharged:
-        $ref: 'Discharged'
-        description: 'Mailpiece has been discharged to an outlet on an automatic sorter.'
+        description: "Mailpiece has been enriched with address and informationcarrier information during the automatic or manual coding process.\r\nYou should only use this event if you are interested in specifics about how or where a certain inforation was extracted\r\nfrom (eg. was the image processed by OCR or was a video coding necessary?)."
       destinationAssigned:
         $ref: 'DestinationAssigned'
-        description: 'The sorting control system has assigned a delivery destination as well as an outlet for the mailpiece.'
+        description: "The sorting control system has assigned a delivery destination as well as an outlet for the mailpiece.\r\nThis event contains all the information abou the sorting descision that was taken. It also contains all the relevant data\r\nthat lead to the sorting descision. This includes for example information about the recipient, identifiers, executed\r\nor discarded services and product codes.\r\n\r\nMost consumer should use this event to extract information about the sorting of a mailpiece."
+      discharged:
+        $ref: 'Discharged'
+        description: "Mailpiece has been discharged to an outlet on an automatic sorter. This event indicates that the sorter has ejected a\r\nparticular mailpiece to a specific physical slide. In the ordinary case this slide will be the correct slide according\r\nto the destination assigned event, however there are several cases in which the sorter might decide to eject the parcel\r\non to another physical slide."
     required:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
-    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nAdditionally, the header 'x-origin-sorting-unit' might be used to filter by sorting unit.\r\nMore documentation is available at https://wikit.post.ch/x/ilk2Og."
+    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nAdditionally, the header 'x-origin-sorting-unit' might be used to filter by sorting unit.\r\n\r\nThe mailpieceGlobalKey identifies a mailpeice from the moment the Swiss Post hears about it (eg. preannouncement, acceptance) to delivery.\r\nWhere the sortingCycleId (available in the inner events) identifies the cycle from the submission to a sorting unit until it is dischaged\r\nagain. This can happen multiple times per sorting unit\r\n(eg. automatic sorting -> manual sorting because of a serivce -> automatic sorting to destination)."
   SimulationOrigin:
     type: string
     enum:
