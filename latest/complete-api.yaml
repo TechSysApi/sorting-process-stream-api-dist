@@ -1,11 +1,11 @@
 swagger: '2.0'
 info:
   title: 'Sorting Process Stream API'
-  description: 'Exposing different events occurring during the sorting process steps a mailpiece has to undergo to pass through a sorting center. Providing information about assigned destinations, applied services, read coding information, and more.'
+  description: "Exposing different events occurring during the sorting process steps a mailpiece has to undergo to pass through a sorting center. Providing information about assigned destinations, applied services, read coding information, and more.\nMore documentation is available at https://wikit.post.ch/x/ilk2Og.\n"
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.15.0
+  version: 1.15.0-feature-docs.3
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -41,7 +41,7 @@ definitions:
     properties:
       eventId:
         type: string
-        description: 'Globally Unique identifier for this mailpiece event.'
+        description: "Globally Unique identifier for this mailpiece event.\r\nUse this to deduplicate events. Kafka and the producer only guarantee at least once."
         maxLength: 200
       mailpieceGlobalKey:
         type: string
@@ -52,21 +52,21 @@ definitions:
         description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
       submitted:
         $ref: 'Submitted'
-        description: 'Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.'
+        description: "Mailpiece has been submitted to the sorting process by being scanned at an automatic or manual sorter.\r\nThis event also contains data about the physical properties of the mailpiece."
       coded:
         $ref: 'Coded'
-        description: 'Mailpiece has been enriched with address and informationcarrier information during the automatic or manual coding process.'
-      discharged:
-        $ref: 'Discharged'
-        description: 'Mailpiece has been discharged to an outlet on an automatic sorter.'
+        description: "Mailpiece has been enriched with address and informationcarrier information during the automatic or manual coding process.\r\nYou should only use this event if you are interested in specifics about how or where a certain inforation was extracted\r\nfrom (eg. was the image processed by OCR or was a video coding necessary?)."
       destinationAssigned:
         $ref: 'DestinationAssigned'
-        description: 'The sorting control system has assigned a delivery destination as well as an outlet for the mailpiece.'
+        description: "The sorting control system has assigned a delivery destination as well as an outlet for the mailpiece.\r\nThis event contains all the information abou the sorting descision that was taken. It also contains all the relevant data\r\nthat lead to the sorting descision. This includes for example information about the recipient, identifiers, executed\r\nor discarded services and product codes.\r\n\r\nMost consumer should use this event to extract information about the sorting of a mailpiece."
+      discharged:
+        $ref: 'Discharged'
+        description: "Mailpiece has been discharged to an outlet on an automatic sorter. This event indicates that the sorter has ejected a\r\nparticular mailpiece to a specific physical slide. In the ordinary case this slide will be the correct slide according\r\nto the destination assigned event, however there are several cases in which the sorter might decide to eject the parcel\r\non to another physical slide."
     required:
       - eventId
       - mailpieceGlobalKey
     additionalProperties: false
-    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nAdditionally, the header 'x-origin-sorting-unit' might be used to filter by sorting unit.\r\nMore documentation is available at https://wikit.post.ch/x/ilk2Og."
+    description: "Composite mailpiece event, having exactly one inner event defined (submitted, destinationAssigned OR any other).\r\nThe event type is available as header 'x-event-type', to be able to filter without deserializing the message.\r\nAdditionally, the header 'x-origin-sorting-unit' might be used to filter by sorting unit.\r\n\r\nThe mailpieceGlobalKey identifies a mailpeice from the moment the Swiss Post hears about it (eg. preannouncement, acceptance) to delivery.\r\nWhere the sortingCycleId (available in the inner events) identifies the cycle from the submission to a sorting unit until it is dischaged\r\nagain. This can happen multiple times per sorting unit\r\n(eg. automatic sorting -> manual sorting because of a serivce -> automatic sorting to destination)."
   SimulationOrigin:
     type: string
     enum:
@@ -2201,6 +2201,168 @@ definitions:
     type: string
     enum:
       - FEDEX
+  DischargeExternalCarrierId:
+    type: object
+    properties:
+      mailpieceId:
+        type: string
+        description: 'Identifier of the mailpiece from the external carrier.'
+      type:
+        $ref: 'DischargeExternalCarrierType'
+        description: 'Name of external carrier.'
+    required:
+      - mailpieceId
+      - type
+    additionalProperties: false
+    description: 'Mailpiece identifier of external carrier. Contains the identifier and the name of the external carrier.'
+  DischargeExternalCarrierType:
+    type: string
+    enum:
+      - FEDEX
+  DischargeIdentifierTags:
+    type: object
+    properties:
+      nationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
+      internationalMailpieceIds:
+        type: array
+        items:
+          type: string
+        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
+      customsNumbers:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
+      boxIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
+      externalCarrierIds:
+        type: array
+        items:
+          $ref: 'DischargeExternalCarrierId'
+        description: 'Contains the list of identifier and type from external carriers like Fedex.'
+      letterTrackingIds:
+        type: array
+        items:
+          type: string
+        description: 'Contains the list of identifiers to track mix mail with a data matrix code (DMC80).'
+    additionalProperties: false
+    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
+  DischargeMailpieceEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        description: 'Globally Unique identifier for this mailpiece event.'
+      mailpieceGlobalKey:
+        type: string
+        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+        maxLength: 200
+      simulation:
+        $ref: 'DischargeSimulation'
+        description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
+      discharged:
+        $ref: 'Discharged'
+        description: 'Mailpiece has been discharged to an outlet on an automatic sorter.'
+    required:
+      - eventId
+      - mailpieceGlobalKey
+    additionalProperties: false
+  DischargeReason:
+    type: string
+    enum:
+      - SORTED
+      - FALLBACK_OUTLET
+      - ITEM_DISAPPEARED
+      - DIMENSION_ERROR
+      - WEIGHT_ERROR
+      - DIRECT_SORTING_MODE
+      - MANUAL_CODING_TIMEOUT
+      - ITEM_REAPPEARED
+      - STRAY_ITEM
+    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: Manual coding of item was started but not finished (e.g. logout of coding client, new coding was started, browser shut-down...)\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking.\n- STRAY_ITEM: An unknown mailpiece was discharged. This usually happens if the sorter lost track of a mailpiece and reported it as ITEM_DISAPPEARED. Then later the item is found again and discharged to an\n               outlet. This is currenlty only known to happen on the old sorters."
+  DischargeSimulationOrigin:
+    type: string
+    enum:
+      - SIMULATOR
+      - FRANKING_LICENSE
+      - LOCATION
+    description: "Describes how/where this event was simulated.\r\n- SIMULATOR: A simulator was used, no real mailpiece exists\r\n- FRANKING_LICENSE: The parcel belongs to a Franking license that is use for testing only\r\n- LOCATION: the location where that mailpiece was sorted is marked as a test location (eg. testing before go live)"
+  DischargeSimulation:
+    type: object
+    properties:
+      origin:
+        $ref: 'DischargeSimulationOrigin'
+    required:
+      - origin
+    additionalProperties: false
+    description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\r\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\r\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\r\n(eg. no notification should be sent to the actual customer).\r\nSimulated events must not affect any non-simulated mailpieces in any way.\r\n\r\nThe Simulation object provides additional information about the purpose of this simulation."
+  DischargeSortingUnit:
+    type: object
+    properties:
+      sortingUnitKey:
+        type: string
+        description: 'Unique key identifying the sorting unit.'
+        maxLength: 200
+      locationKey:
+        type: string
+        description: 'Unique key identifying the location.'
+        maxLength: 200
+    required:
+      - sortingUnitKey
+      - locationKey
+    additionalProperties: false
+    description: 'Sorting unit at a location performing the sorting process step.'
+  Discharged:
+    type: object
+    properties:
+      sortingTime:
+        $ref: 'DateTime'
+        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
+      processingItemId:
+        type: string
+        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
+        maxLength: 32
+      sortingCycleId:
+        type: string
+        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
+        maxLength: 200
+      timestamp:
+        $ref: 'DateTime'
+        description: 'Date & time of the event occurance. This is the time when message was received from the sorting unit.'
+      idTags:
+        $ref: 'DischargeIdentifierTags'
+        description: 'Barcodes and other tags identifying the mailpiece.'
+      sortingUnit:
+        $ref: 'DischargeSortingUnit'
+        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
+      outlet:
+        $ref: 'ResourceIdentifier'
+        description: "Name of the outlet where the mailpiece has been discharged to.\r\nThe outlet is not available if the mailpiece has not been sorted on a automatic sorter (eg. manual bulk sorting)"
+      dischargeReason:
+        $ref: 'DischargeReason'
+        description: "Specifies why the mailpiece has been discharged. Normally this should be SORTED to indicate\r\nthat the sorting unit did what the Sorting Control System requested."
+      sourceId:
+        type: string
+        description: "The id of the device that sent the message to confirm the discharge.\r\nThis MUST NOT be used to build business logic and can change at any time. It SHOULD\r\nonly be used for diagnostics or statistical purposes."
+      processPoint:
+        $ref: 'ResourceIdentifier'
+        description: "The location where the mailpiece was discharged.\r\nACTION: will be marked as mandatory as soon as all producers and consumers support it."
+    required:
+      - sortingTime
+      - processingItemId
+      - sortingCycleId
+      - timestamp
+      - sortingUnit
+      - dischargeReason
+      - sourceId
+    additionalProperties: false
   SubmittedConveyingAidDetectionType:
     type: string
     enum:
@@ -2487,165 +2649,3 @@ definitions:
       - sourceId
     additionalProperties: false
     description: 'Event produced when an mailpiece is submitted to a sorting unit.'
-  DischargeExternalCarrierId:
-    type: object
-    properties:
-      mailpieceId:
-        type: string
-        description: 'Identifier of the mailpiece from the external carrier.'
-      type:
-        $ref: 'DischargeExternalCarrierType'
-        description: 'Name of external carrier.'
-    required:
-      - mailpieceId
-      - type
-    additionalProperties: false
-    description: 'Mailpiece identifier of external carrier. Contains the identifier and the name of the external carrier.'
-  DischargeExternalCarrierType:
-    type: string
-    enum:
-      - FEDEX
-  DischargeIdentifierTags:
-    type: object
-    properties:
-      nationalMailpieceIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of national identifiers to identify a mailpiece within the country.\r\nThe id is printed on the mailpiece by the sender."
-      internationalMailpieceIds:
-        type: array
-        items:
-          type: string
-        description: "Contains the list of international identifiers to identify a mailpiece internationally.\r\nThe id is printed on the mailpiece by the sender."
-      customsNumbers:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of national identifiers from the customs to track an imported mailpiece within the country.'
-      boxIds:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of identifiers to identify a Dispobox within the country.'
-      externalCarrierIds:
-        type: array
-        items:
-          $ref: 'DischargeExternalCarrierId'
-        description: 'Contains the list of identifier and type from external carriers like Fedex.'
-      letterTrackingIds:
-        type: array
-        items:
-          type: string
-        description: 'Contains the list of identifiers to track mix mail with a data matrix code (DMC80).'
-    additionalProperties: false
-    description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
-  DischargeMailpieceEvent:
-    type: object
-    properties:
-      eventId:
-        type: string
-        description: 'Globally Unique identifier for this mailpiece event.'
-      mailpieceGlobalKey:
-        type: string
-        description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
-        maxLength: 200
-      simulation:
-        $ref: 'DischargeSimulation'
-        description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
-      discharged:
-        $ref: 'Discharged'
-        description: 'Mailpiece has been discharged to an outlet on an automatic sorter.'
-    required:
-      - eventId
-      - mailpieceGlobalKey
-    additionalProperties: false
-  DischargeReason:
-    type: string
-    enum:
-      - SORTED
-      - FALLBACK_OUTLET
-      - ITEM_DISAPPEARED
-      - DIMENSION_ERROR
-      - WEIGHT_ERROR
-      - DIRECT_SORTING_MODE
-      - MANUAL_CODING_TIMEOUT
-      - ITEM_REAPPEARED
-      - STRAY_ITEM
-    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: Manual coding of item was started but not finished (e.g. logout of coding client, new coding was started, browser shut-down...)\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking.\n- STRAY_ITEM: An unknown mailpiece was discharged. This usually happens if the sorter lost track of a mailpiece and reported it as ITEM_DISAPPEARED. Then later the item is found again and discharged to an\n               outlet. This is currenlty only known to happen on the old sorters."
-  DischargeSimulationOrigin:
-    type: string
-    enum:
-      - SIMULATOR
-      - FRANKING_LICENSE
-      - LOCATION
-    description: "Describes how/where this event was simulated.\r\n- SIMULATOR: A simulator was used, no real mailpiece exists\r\n- FRANKING_LICENSE: The parcel belongs to a Franking license that is use for testing only\r\n- LOCATION: the location where that mailpiece was sorted is marked as a test location (eg. testing before go live)"
-  DischargeSimulation:
-    type: object
-    properties:
-      origin:
-        $ref: 'DischargeSimulationOrigin'
-    required:
-      - origin
-    additionalProperties: false
-    description: "Marks this event as a simulated event. This means that the mailpiece referenced in this message should not be considered a production mailpiece.\r\nIt is in the responsibility of the consumer to decide what to do with this information. For most use cases this event can be processed like\r\nany other event, but should be marks as a simulated event. Some actions should not be executed for simulated events\r\n(eg. no notification should be sent to the actual customer).\r\nSimulated events must not affect any non-simulated mailpieces in any way.\r\n\r\nThe Simulation object provides additional information about the purpose of this simulation."
-  DischargeSortingUnit:
-    type: object
-    properties:
-      sortingUnitKey:
-        type: string
-        description: 'Unique key identifying the sorting unit.'
-        maxLength: 200
-      locationKey:
-        type: string
-        description: 'Unique key identifying the location.'
-        maxLength: 200
-    required:
-      - sortingUnitKey
-      - locationKey
-    additionalProperties: false
-    description: 'Sorting unit at a location performing the sorting process step.'
-  Discharged:
-    type: object
-    properties:
-      sortingTime:
-        $ref: 'DateTime'
-        description: "Date & time when the sorting cycle started. This time will be used as a refernce time for the whole sorting cycle.\r\nThis timestamp will be taken at the begining of the cycle and stays the same for the whole sorting cycle."
-      processingItemId:
-        type: string
-        description: "Identifier generated by the sorting unit for one sorting cycle. This id is only valid during the\r\nsorting cycle and might be reused by the sorting unit quickly for a next sorting cycle.\r\nTo correlate event to one sorting cycle use the sortingCycleId."
-        maxLength: 32
-      sortingCycleId:
-        type: string
-        description: "Globally unique identifier for the sorting cylce.\r\nA sorting cycle starts when a mailpiece is submitted to a sorting unit and end with the discharge of the mailpiece."
-        maxLength: 200
-      timestamp:
-        $ref: 'DateTime'
-        description: 'Date & time of the event occurance. This is the time when message was received from the sorting unit.'
-      idTags:
-        $ref: 'DischargeIdentifierTags'
-        description: 'Barcodes and other tags identifying the mailpiece.'
-      sortingUnit:
-        $ref: 'DischargeSortingUnit'
-        description: 'Sorting unit where the mailpiece was being processed, when the destination was assigned.'
-      outlet:
-        $ref: 'ResourceIdentifier'
-        description: "Name of the outlet where the mailpiece has been discharged to.\r\nThe outlet is not available if the mailpiece has not been sorted on a automatic sorter (eg. manual bulk sorting)"
-      dischargeReason:
-        $ref: 'DischargeReason'
-        description: "Specifies why the mailpiece has been discharged. Normally this should be SORTED to indicate\r\nthat the sorting unit did what the Sorting Control System requested."
-      sourceId:
-        type: string
-        description: "The id of the device that sent the message to confirm the discharge.\r\nThis MUST NOT be used to build business logic and can change at any time. It SHOULD\r\nonly be used for diagnostics or statistical purposes."
-      processPoint:
-        $ref: 'ResourceIdentifier'
-        description: "The location where the mailpiece was discharged.\r\nACTION: will be marked as mandatory as soon as all producers and consumers support it."
-    required:
-      - sortingTime
-      - processingItemId
-      - sortingCycleId
-      - timestamp
-      - sortingUnit
-      - dischargeReason
-      - sourceId
-    additionalProperties: false
