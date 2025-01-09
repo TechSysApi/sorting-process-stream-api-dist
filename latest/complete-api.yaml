@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.15.1
+  version: 1.16.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -997,8 +997,9 @@ definitions:
     enum:
       - FORWARD
       - RETURN
+      - FURTHER_PROCESSING
       - UNKNOWN
-    description: "The transfer service type.\n\nFORWARD: Forward transfer.\nRETURN: Return transfer.\nUNKNOWN: Unknown transfer."
+    description: "The transfer service type.\n\nFORWARD: Forward transfer.\nRETURN: Return transfer.\nFURTHER_PROCESSING: Further Processing (Nachbehandlung).\nUNKNOWN: Unknown transfer."
   AssignmentTransferService:
     type: object
     properties:
