@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.20.0-feat-update-sorting-process-related-api.1
+  version: 1.21.0-feat-update-sorting-process-related-api.2
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2252,7 +2252,11 @@ definitions:
       - MANUAL_CODING_TIMEOUT
       - ITEM_REAPPEARED
       - STRAY_ITEM
-    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: Manual coding of item was started but not finished (e.g. logout of coding client, new coding was started, browser shut-down...)\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking.\n- STRAY_ITEM: An unknown mailpiece was discharged. This usually happens if the sorter lost track of a mailpiece and reported it as ITEM_DISAPPEARED. Then later the item is found again and discharged to an\n               outlet. This is currenlty only known to happen on the old sorters."
+      - MANUAL_CODING_USER_RESET
+      - MANUAL_CODING_BROWSER_CLOSED
+      - MANUAL_CODING_USER_LOGOUT
+      - MANUAL_CODING_SYSTEM_LOGOUT
+    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: DEPRECATED, will be removed soon / is replaced by MANUAL_CODING_USER_RESET, MANUAL_CODING_BROWSER_CLOSED, MANUAL_CODING__USER_LOGOUT, MANUAL_CODING__SYSTEM_LOGOUT.\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking.\n- STRAY_ITEM: An unknown mailpiece was discharged. This usually happens if the sorter lost track of a mailpiece and reported it as ITEM_DISAPPEARED. Then later the item is found again and discharged to an outlet. This is currenlty only known to happen on the old sorters.\n- MANUAL_CODING_USER_RESET: The user has manually reset the coding process.\n- MANUAL_CODING_BROWSER_CLOSED: The user has closed the web browser.\n- MANUAL_CODING_USER_LOGOUT: The user has logged out of the  application.\n- MANUAL_CODING_SYSTEM_LOGOUT: The user was logged out by the application."
   DischargeSimulationOrigin:
     type: string
     enum:
