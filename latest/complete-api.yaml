@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.20.0
+  version: 1.21.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -886,12 +886,11 @@ definitions:
     enum:
       - AUTOMATIC
       - MANUAL_CODING_REJECT
-      - MANUAL_CODING_LIGHT
       - MANUAL_CODING_BULK
-      - MANUAL_CODING_BULK_AUTOMATIC
       - MANUAL_PRESORTING
       - MANUAL_SORTING
-    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods\r\nMANUAL_PRESORTING Device where items are coded automatically and sorted manually to achieve a pre-sortation\r\nMANUAL_SORTING Mailpieces are sorted manually to the correct outlet. Similar to AUTOMATIC, but the mailpiece is transported by a human instead of a sorting unit"
+      - MANUAL_SORTING_BULK_ASSISTED
+    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_PRESORTING Device where items are coded automatically and sorted manually to achieve a pre-sortation\r\nMANUAL_SORTING Mailpieces are sorted manually to the correct outlet. Similar to AUTOMATIC, but the mailpiece is transported by a human instead of a sorting unit\r\nMANUAL_SORTING_BULK_ASSISTED Bulky goods are sorted manually with the help of a special workstation to capture barcodes, weight, dimensions and address information."
   AssignmentSortingProduct:
     type: object
     properties:
@@ -927,7 +926,7 @@ definitions:
         description: 'Sorting result for delivery to an addressing destination.'
       specialSortResult:
         $ref: 'AssignmentSpecialSortResult'
-        description: 'Sorting result for special handling (services or manual processing).'
+        description: "Sorting result for special handling (services or manual processing).\n\nIf both, addressingDestinationResult and specialSortResult are set, this means that an attempt to sort for delivery to\nan addressing destination was made. However, this failed because, for instance, no or only an exceeded entry in the sorting\nplan was found. In that case a fallback to special handling is done."
       sortingEndpointGroup:
         $ref: 'AssignmentSortingEndpointGroup'
         description: 'The SortingEndpointGroup that was resolved from the sortplan and communicated to the sorting unit.'
@@ -950,7 +949,7 @@ definitions:
       - sortingProduct
       - intendedProcessing
     additionalProperties: false
-    description: "Result of the sorting process step.\nEither addressingDestinationResult or specialSortResult must be present, but never both."
+    description: 'Result of the sorting process step.'
   AssignmentSortingUnit:
     type: object
     properties:
@@ -2012,11 +2011,10 @@ definitions:
     enum:
       - AUTOMATIC
       - MANUAL_CODING_REJECT
-      - MANUAL_CODING_LIGHT
       - MANUAL_CODING_BULK
-      - MANUAL_CODING_BULK_AUTOMATIC
       - MANUAL_SORTING
-    description: "AUTOMATIC Sorted by the sorter\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods\nMANUAL_SORTING Mailpieces are sorted manually to the correct outlet. Similar to AUTOMATIC, but the mailpiece is transported by a human instead of a sorting unit"
+      - MANUAL_SORTING_BULK_ASSISTED
+    description: "AUTOMATIC Sorted by the sorter\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\nMANUAL_SORTING Mailpieces are sorted manually to the correct outlet. Similar to AUTOMATIC, but the mailpiece is transported by a human instead of a sorting unit\nMANUAL_SORTING_BULK_ASSISTED Bulky goods are sorted manually with the help of a special workstation to capture barcodes, weight, dimensions and address information."
   CodedSortingUnit:
     type: object
     properties:
@@ -2537,12 +2535,11 @@ definitions:
     enum:
       - AUTOMATIC
       - MANUAL_CODING_REJECT
-      - MANUAL_CODING_LIGHT
       - MANUAL_CODING_BULK
-      - MANUAL_CODING_BULK_AUTOMATIC
       - MANUAL_PRESORTING
       - MANUAL_SORTING
-    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_LIGHT Device where barcodes barcodes, products and the weight is captured (manual or partially automated)\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_CODING_BULK_AUTOMATIC Device where a coder manually captures barcodes and other specific information for bulky goods\r\nMANUAL_PRESORTING Device where items are coded automatically and sorted manually to achieve a pre-sortation\r\nMANUAL_SORTING Mailpieces are sorted manually to the correct outlet. Similar to AUTOMATIC, but the mailpiece is transported by a human instead of a sorting unit"
+      - MANUAL_SORTING_BULK_ASSISTED
+    description: "Defines the sorting process.\r\nAUTOMATIC Sorted by the sorter\r\nMANUAL_CODING_REJECT Device where a coder manually captures barcodes and enters address information\r\nMANUAL_CODING_BULK Device where barcodes, weight and dimensions and address information for bulky goods are captured or entered (manual or partially automated)\r\nMANUAL_PRESORTING Device where items are coded automatically and sorted manually to achieve a pre-sortation\r\nMANUAL_SORTING Mailpieces are sorted manually to the correct outlet. Similar to AUTOMATIC, but the mailpiece is transported by a human instead of a sorting unit\r\nMANUAL_SORTING_BULK_ASSISTED Bulky goods are sorted manually with the help of a special workstation to capture barcodes, weight, dimensions and address information."
   SubmittedSortingUnit:
     type: object
     properties:
