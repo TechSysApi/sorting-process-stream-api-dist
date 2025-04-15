@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.23.0
+  version: 1.24.0-feature-PZS-11356.2
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -380,10 +380,17 @@ definitions:
       frankingLicense:
         type: string
         description: "The franking license define how a sender is billed for his mailpieces.\nIt MUST NOT be used to identify a sender for other purposes. Use the SenderReference for this.\nIt is currently extracted from the nationalMailpieceId."
+      physicalCategories:
+        type: array
+        items:
+          $ref: 'AssignmentPhysicalCategory'
+        description: 'The physical categories that were evaluated based on the physical properties.'
+        minItems: 1
     required:
       - productModuleKeys
       - productBundles
       - propertyGroupKeys
+      - physicalCategories
     additionalProperties: false
     description: 'Attributes evaluated/coded for a mailpiece.'
   AssignmentMailpieceEvent:
@@ -428,6 +435,16 @@ definitions:
       - outletName
     additionalProperties: false
     description: "Mail is manually or automatically sorted to outlets.\nThis is typically the case for letter sorting processes where letters are first collected in a smaller container."
+  AssignmentPhysicalCategory:
+    type: string
+    enum:
+      - SMALL_ITEM
+      - MAILBOX_ITEM
+      - BULKY_GOODS
+      - BIG_SMALL_ITEM
+      - DEFAULT
+      - UNKNOWN
+    description: "This enum specifies the physical category of a mailpiece\n\nSMALL_ITEM A small mailpiece (Kleinwaren/Kleine Sendungen)\nMAILBOX_ITEM A mailpiece that fits in a mailbox (Ablagefachfähige Sendung)\nBULKY_GOODS Bulky goods (Sperrgut)\nBIG_SMALL_ITEM A big small mailpiece (Grosse Kleinware)\nDEFAULT None of the defined special physical categories matched with the physical properties available\nUNKNOWN No physical properties were available for matching a physical category"
   AssignmentPostboxDestination:
     type: object
     properties:
