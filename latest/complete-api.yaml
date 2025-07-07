@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.27.0
+  version: 1.28.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -163,6 +163,10 @@ definitions:
         type: string
         description: 'An unique name within a sorting location to identify a container position.'
         maxLength: 200
+      intermediateContainerPositionName:
+        type: string
+        description: 'Intermediate container position used before moving the mail to the actual container position.'
+        maxLength: 200
     required:
       - containerPositionName
     additionalProperties: false
@@ -173,6 +177,10 @@ definitions:
       containerPositionName:
         type: string
         description: 'An unique name within a sorting location to identify a container position.'
+        maxLength: 200
+      intermediateContainerPositionName:
+        type: string
+        description: 'Intermediate container position used before moving the mail to the actual container position.'
         maxLength: 200
       outletName:
         type: string
