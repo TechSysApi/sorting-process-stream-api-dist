@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.28.0
+  version: 1.29.0-feature-PZS-11492-mp24-redirect.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -619,8 +619,9 @@ definitions:
       - REDIRECT_POBOX
       - PREFERRED_DAY
       - CUSTOMER_DESTINATION
+      - ACCESS_POINT_REDIRECT
       - UNKNOWN
-    description: "The recipient standing order service type.\n\nHOLD_MAIL: Hold mail order.\nREDIRECT_TEMPORARY: Temporary redirect order.\nREDIRECT_PERMANENT: Permanent redirect order.\nREDIRECT_MOVED: Moved redirect order.\nREDIRECT_POBOX: PoBox redirect order.\nPREFERRED_DAY: Preferred day order.\nCUSTOMER_DESTINATION: Customer destination order.\nUNKNOWN: Unknown order."
+    description: "The recipient standing order service type.\n\nHOLD_MAIL: Hold mail order.\nREDIRECT_TEMPORARY: Temporary redirect order.\nREDIRECT_PERMANENT: Permanent redirect order.\nREDIRECT_MOVED: Moved redirect order.\nREDIRECT_POBOX: PoBox redirect order.\nPREFERRED_DAY: Preferred day order.\nCUSTOMER_DESTINATION: Customer destination order.\nACCESS_POINT_REDIRECT: Access point redirect order.\nUNKNOWN: Unknown order."
   AssignmentRecipientStandingOrder:
     type: object
     properties:
