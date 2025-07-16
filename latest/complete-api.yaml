@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.28.0
+  version: 1.29.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -452,9 +452,10 @@ definitions:
       - BIG_SMALL_ITEM
       - CARGO
       - BULKY_GOODS_FOR_TAXING_PURPOSES
+      - PARCEL_TERMINAL_ITEM
       - DEFAULT
       - UNKNOWN
-    description: "This enum specifies the physical category of a mailpiece\n\nSMALL_ITEM A small mailpiece (Kleinwaren/Kleine Sendungen)\nMAILBOX_ITEM A mailpiece that fits in a mailbox (Ablagefachfähige Sendung)\nBULKY_GOODS Bulky goods (Sperrgut)\nBIG_SMALL_ITEM A big small mailpiece (Grosse Kleinware)\nCARGO A cargo mailpiece (Stückgut)\nDEPRECATED: BULKY_GOODS_FOR_TAXING_PURPOSES A bulky goods mailpiece with respective to taxing purposes (Sperrgut für Verrechnung)\nDEFAULT None of the defined special physical categories matched with the physical properties available\nUNKNOWN No physical properties were available for matching a physical category"
+    description: "This enum specifies the physical category of a mailpiece\n\nSMALL_ITEM A small mailpiece (Kleinwaren/Kleine Sendungen)\nMAILBOX_ITEM A mailpiece that fits in a mailbox (Ablagefachfähige Sendung)\nBULKY_GOODS Bulky goods (Sperrgut)\nBIG_SMALL_ITEM A big small mailpiece (Grosse Kleinware)\nCARGO A cargo mailpiece (Stückgut)\nDEPRECATED: BULKY_GOODS_FOR_TAXING_PURPOSES A bulky goods mailpiece with respective to taxing purposes (Sperrgut für Verrechnung)\nPARCEL_TERMINAL_ITEM A mailpiece that fits into the largest compartment of a MyPost24 parcel terminal\nDEFAULT None of the defined special physical categories matched with the physical properties available\nUNKNOWN No physical properties were available for matching a physical category"
   AssignmentPostboxDestination:
     type: object
     properties:
