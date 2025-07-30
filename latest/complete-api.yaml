@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.32.0
+  version: 1.32.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2574,22 +2574,22 @@ definitions:
     type: object
     properties:
       length:
-        type: number
+        type: integer
         description: 'Length in [mm].'
       width:
-        type: number
+        type: integer
         description: 'Width in [mm].'
       height:
-        type: number
+        type: integer
         description: 'Height in [mm].'
       weight:
-        type: number
+        type: integer
         description: 'Actual weight in [g].'
       boxVolume:
-        type: number
+        type: integer
         description: 'The volume of the minimal box that encloses the whole mailpiece in dm³.'
       realVolume:
-        type: number
+        type: integer
         description: 'The actual volume of the mailpiece in dm³.'
       shape:
         $ref: 'SubmittedShape'
