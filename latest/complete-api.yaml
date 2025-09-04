@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.36.0
+  version: 1.37.0-feat-update-api.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -404,6 +404,9 @@ definitions:
           $ref: 'AssignmentPhysicalCategory'
         description: 'The physical categories that were evaluated based on the physical properties.'
         minItems: 1
+      sortCode:
+        type: string
+        description: "Sort code used by the mix mail system.\nThis information is specific to the mix mail case and MUST NOT be used for any other purpose."
     required:
       - productModuleKeys
       - productBundles
