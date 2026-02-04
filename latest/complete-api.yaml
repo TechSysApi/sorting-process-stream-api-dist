@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.39.0
+  version: 1.40.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -1270,6 +1270,9 @@ definitions:
         items:
           type: string
         description: 'Address lines (raw, unvalidated address data submitted by the customer)'
+      writingStyle:
+        $ref: 'CodedWritingStyle'
+        description: 'Writing style of an address'
       source:
         $ref: 'CodedAddressSource'
         description: 'Source of the address'
@@ -2238,6 +2241,12 @@ definitions:
       - enrichmentSteps
       - maxImageBasedCodingReached
     additionalProperties: false
+  CodedWritingStyle:
+    type: string
+    enum:
+      - MACHINE_PRINT
+      - HAND_WRITTEN
+    description: "MACHINE_PRINT = Machine printed address\nHAND_WRITTEN = Hand written address"
   Coded:
     type: object
     properties:
