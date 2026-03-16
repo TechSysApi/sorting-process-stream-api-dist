@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.40.0
+  version: 1.41.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -47,6 +47,7 @@ definitions:
         type: string
         description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
         maxLength: 200
+        minLength: 1
       simulation:
         $ref: 'Simulation'
         description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
@@ -425,6 +426,7 @@ definitions:
         type: string
         description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
         maxLength: 200
+        minLength: 1
       simulation:
         $ref: 'AssignmentSimulation'
         description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
@@ -687,13 +689,12 @@ definitions:
   AssignmentSenderSingleOrderType:
     type: string
     enum:
-      - INSPECTION
       - INTERCEPTION
       - PRODUCT_CHANGE
       - REDIRECT
       - RETURN
       - UNKNOWN
-    description: "The sender single order type.\n\nINSPECTION: [Action: deprecated in favour of interception: 1.1.2026] Inspection order.\nINTERCEPTION: inspect mailpiece via customs officer or sorting specialist.\nPRODUCT_CHANGE: Change product(s) for the mailpiece.\nRETURN: Return order.\nREDIRECT: Redirect/Forward order.\nUNKNOWN: Unknown order."
+    description: "The sender single order type.\n\nINTERCEPTION: inspect mailpiece via customs officer or sorting specialist.\nPRODUCT_CHANGE: Change product(s) for the mailpiece.\nRETURN: Return order.\nREDIRECT: Redirect/Forward order.\nUNKNOWN: Unknown order."
   AssignmentSenderSingleOrder:
     type: object
     properties:
@@ -1799,6 +1800,8 @@ definitions:
       mailpieceGlobalKey:
         type: string
         description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
+        maxLength: 200
+        minLength: 1
       simulation:
         $ref: 'CodedSimulation'
         description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
@@ -2363,6 +2366,7 @@ definitions:
         type: string
         description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
         maxLength: 200
+        minLength: 1
       simulation:
         $ref: 'DischargeSimulation'
         description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
@@ -2576,6 +2580,7 @@ definitions:
         type: string
         description: "Globally unique key for the mailpiece.\r\nOnly a single mailpiece may have the same Key and the Key is never to be reused again, allowing to identify every mailpiece\r\never processed.\r\nPrimary key 🔑"
         maxLength: 200
+        minLength: 1
       simulation:
         $ref: 'SubmittedSimulation'
         description: 'If simulation is not null, this event belongs to a simulation and should not be considered productive.'
