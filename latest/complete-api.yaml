@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.44.0
+  version: 1.45.0-feature-deprecate-box-volume-in-submitted.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2625,7 +2625,7 @@ definitions:
         description: 'Actual weight in [g].'
       boxVolume:
         type: number
-        description: 'The volume of the minimal box that encloses the whole mailpiece in dm³.'
+        description: "The volume of the minimal box that encloses the whole mailpiece in dm³.\r\n\r\nDEPRECATED: This property is deprecated and will be removed in a future version. The box volume can be calculated by the consumer from the dimensions."
       realVolume:
         type: number
         description: 'The actual volume of the mailpiece in dm³.'
