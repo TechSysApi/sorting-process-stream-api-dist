@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.46.0
+  version: 1.47.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2544,6 +2544,12 @@ definitions:
         description: 'Contains the list of identifiers to track mix mail with a data matrix code (DMC80).'
     additionalProperties: false
     description: 'Contains a list of logistic or technical identifiers to identify a mail item within a specific context'
+  SubmittedInformationCarrierOrigin:
+    type: string
+    enum:
+      - SUBMIT_MAILPIECE
+      - BARCODE_CODING_RESULT
+    description: "SUBMIT_MAILPIECE Information carrier was send with the submit mailpiece message\r\nBARCODE_CODING_RESULT Information carrier was send with the barcode coding result message"
   SubmittedInformationCarrier:
     type: object
     properties:
@@ -2556,6 +2562,11 @@ definitions:
       marker:
         $ref: 'SubmittedMarker'
         description: 'The information carrier represents the given marker.'
+      origins:
+        type: array
+        items:
+          $ref: 'SubmittedInformationCarrierOrigin'
+        description: 'Origins of the information carrier where it was read and transmitted to the sorting control system.'
     additionalProperties: false
     description: "Identified and captured information carrier (e.g. barcodes, logos).\n\nEither (symbology AND value) OR marker has to be set."
   SubmittedLegalForTrade:
