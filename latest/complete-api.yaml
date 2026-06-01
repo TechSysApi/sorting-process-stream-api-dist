@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.45.0
+  version: 1.46.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2644,6 +2644,9 @@ definitions:
       measuringAid:
         $ref: 'SubmittedMeasuringAid'
         description: "Information about the measuring aid the mailpiece is on.\r\nMeasuring aids are used for mailpieces that are e.g. to flat to be recognized by the scanner and are put on a measuring aid.\r\nIf the mailpiece is not on a measuring aid, this is not set."
+      dimensionsExceedMachineLimits:
+        type: boolean
+        description: "Indicates whether the mailpiece dimensions exceed the physical processing limits of the sorter (from scanner to outlet).\r\n- `true`: The dimensions exceed machine limits and should not be included in this message, as they are invalid for processing.\r\n- `false`: The dimensions are within machine limits and plausible for processing.\r\n- `undefined`: It is unknown whether the dimensions exceed machine limits. This is expected when limits are not defined or measurements could not be performed."
     required:
       - legalForTrade
     additionalProperties: false
