@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.49.0
+  version: 1.50.0-feature-add-discharge-reason-for-unfinished-sorting-cycle.1
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -2397,8 +2397,9 @@ definitions:
       - MANUAL_CODING_BROWSER_CLOSED
       - MANUAL_CODING_USER_LOGOUT
       - MANUAL_CODING_SYSTEM_LOGOUT
+      - SORTING_CYCLE_UNFINISHED_TIMEOUT
       - UNKNOWN
-    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: DEPRECATED, will be removed soon / is replaced by MANUAL_CODING_USER_RESET, MANUAL_CODING_BROWSER_CLOSED, MANUAL_CODING__USER_LOGOUT, MANUAL_CODING__SYSTEM_LOGOUT.\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking.\n- STRAY_ITEM: An unknown mailpiece was discharged. This usually happens if the sorter lost track of a mailpiece and reported it as ITEM_DISAPPEARED. Then later the item is found again and discharged to an outlet. This is currenlty only known to happen on the old sorters.\n- MANUAL_CODING_USER_RESET: The user has manually reset the coding process.\n- MANUAL_CODING_BROWSER_CLOSED: The user has closed the web browser.\n- MANUAL_CODING_USER_LOGOUT: The user has logged out of the  application.\n- MANUAL_CODING_SYSTEM_LOGOUT: The user was logged out by the application.\n- UNKNOWN: An unknown discharge reason was sent by the ASL and could not be mapped to a known one."
+    description: "Defines the reasons why the mailpiece was discharged.\nList of values:\n- SORTED: The item has been discharged according to the information received from the Sorting Control System.\n- FALLBACK_OUTLET: Item has reached the max allowed amount of recirculations or end of line on a linear sorter. This also applies for items with discharge error.\n- ITEM_DISAPPEARED: The item was lost at unknown location.\n- DIMENSION_ERROR: Item oversize. The item was discharged, because its dimension exceeded the allowed maximum for this sorting unit.\n- WEIGHT_ERROR: The item was discharged because weight limit for this sorting unit has been exceeded.\n- DIRECT_SORTING_MODE: Item sorted by the direct sorting mode.\n- MANUAL_CODING_TIMEOUT: DEPRECATED, will be removed soon / is replaced by MANUAL_CODING_USER_RESET, MANUAL_CODING_BROWSER_CLOSED, MANUAL_CODING__USER_LOGOUT, MANUAL_CODING__SYSTEM_LOGOUT.\n- ITEM_REAPPEARED: A mailpiece previously reported as disappeared is, after a timeout, reported again prior to being discharged. Happens in sorter systems that rely on reading of identifiers for tracking.\n- STRAY_ITEM: An unknown mailpiece was discharged. This usually happens if the sorter lost track of a mailpiece and reported it as ITEM_DISAPPEARED. Then later the item is found again and discharged to an outlet. This is currenlty only known to happen on the old sorters.\n- MANUAL_CODING_USER_RESET: The user has manually reset the coding process.\n- MANUAL_CODING_BROWSER_CLOSED: The user has closed the web browser.\n- MANUAL_CODING_USER_LOGOUT: The user has logged out of the  application.\n- MANUAL_CODING_SYSTEM_LOGOUT: The user was logged out by the application.\n- SORTING_CYCLE_UNFINISHED_TIMEOUT: The sorting cycle was not finished within the expected time and was closed by the sorting system. Process point may be set to null in this case.\n- UNKNOWN: An unknown discharge reason was sent by the ASL and could not be mapped to a known one."
   DischargeSimulationOrigin:
     type: string
     enum:
@@ -2465,7 +2466,7 @@ definitions:
         description: "The id of the device that sent the message to confirm the discharge.\r\nThis MUST NOT be used to build business logic and can change at any time. It SHOULD\r\nonly be used for diagnostics or statistical purposes."
       processPoint:
         $ref: 'ResourceIdentifier'
-        description: "The location where the mailpiece was discharged.\r\nACTION: will be marked as mandatory as soon as all producers and consumers support it."
+        description: "The location where the mailpiece was discharged.\r\nNull should only be set if the discharge processing point is unknown. This is especially the case when the information is entirely missing from the sorter."
     required:
       - sortingTime
       - processingItemId
