@@ -109,3 +109,4 @@
 - [v1.48.0](https://TechSysApi.github.io/sorting-process-stream-api-dist/v1.48.0/ui/?url=../complete-api.yaml)
 - [v1.49.0](https://TechSysApi.github.io/sorting-process-stream-api-dist/v1.49.0/ui/?url=../complete-api.yaml)
 - [v1.50.0](https://TechSysApi.github.io/sorting-process-stream-api-dist/v1.50.0/ui/?url=../complete-api.yaml)
+- [v1.51.0](https://TechSysApi.github.io/sorting-process-stream-api-dist/v1.51.0/ui/?url=../complete-api.yaml)
