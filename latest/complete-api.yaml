@@ -5,7 +5,7 @@ info:
   contact:
     name: 'Sorting Software Solutions'
     email: sort.software.solutions@post.ch
-  version: 1.52.0
+  version: 1.53.0
 host: 'server:8080'
 basePath: logistics.sorting.process
 paths:
@@ -1049,15 +1049,18 @@ definitions:
   AssignmentSpecialSortResult:
     type: object
     properties:
+      submitReason:
+        $ref: 'AssignmentSubmitReason'
+        description: "Specifies what submit reason caused this special sort. This field is null\nif this special sort was not caused by a sorting unit.\nExactly one of sortReason, submitReason, codingReason or requestReason must be set."
       sortReason:
         $ref: 'AssignmentSortReason'
-        description: "Specifies what sort reason caused this special sort. This field is null\nif this special sort was not caused by a sort reason.\nExactly one of sortReason, codingReason or requestReason must be set."
+        description: "Specifies what sort reason caused this special sort. This field is null\nif this special sort was not caused by a sort reason.\nExactly one of sortReason, submitReason, codingReason or requestReason must be set."
       codingReason:
         $ref: 'AssignmentCodingReason'
-        description: "Specifies what coding reason caused this special sort. This field is null\nif this special sort was not caused by a response from coding.\nExactly one of sortReason, codingReason or requestReason must be set."
+        description: "Specifies what coding reason caused this special sort. This field is null\nif this special sort was not caused by a response from coding.\nExactly one of sortReason, submitReason, codingReason or requestReason must be set."
       requestReason:
         $ref: 'AssignmentRequestReason'
-        description: "Specifies what request reason caused this special sort. This field is null\nif this special sort was not caused by a sorting unit.\nExactly one of sortReason, codingReason or requestReason must be set."
+        description: "Specifies what request reason caused this special sort. This field is null\nif this special sort was not caused by a sorting unit.\nExactly one of sortReason, submitReason, codingReason or requestReason must be set."
       specialSortKey:
         type: string
         description: 'The special sort that was selected for this mailpiece.'
@@ -1071,6 +1074,13 @@ definitions:
       - specialSortName
     additionalProperties: false
     description: 'Special sort result evaluated for the mailpiece'
+  AssignmentSubmitReason:
+    type: string
+    enum:
+      - INDUCTION
+      - ITEM_REAPPEARED
+      - ITEM_STRAY
+    description: "The reason why the machine submitted a mailpiece.\nList of values:\n- INDUCTION: Item regularly inducted.\n- ITEM_REAPPEARED: Disappeared item reappeared.\n- ITEM_STRAY: Stray item detected."
   AssignmentTransferServiceType:
     type: string
     enum:
